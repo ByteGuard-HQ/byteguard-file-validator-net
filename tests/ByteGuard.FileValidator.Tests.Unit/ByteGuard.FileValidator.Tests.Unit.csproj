@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="NSubstitute" Version="5.3.0" />
+        <PackageReference Include="xunit" Version="2.5.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <EmbeddedResource Include="**\DOCX_test.docx" />
+        <EmbeddedResource Include="**\ODT_test.odt" />
+        <EmbeddedResource Include="**\PPTX_test.pptx" />
+        <EmbeddedResource Include="**\XLSX_test.xlsx" />
+        <EmbeddedResource Include="**\ZIP_test_fake_DOCX.docx" />
+        <EmbeddedResource Include="**\ZIP_test_fake_ODT.odt" />
+        <EmbeddedResource Include="**\ZIP_test_fake_PPTX.pptx" />
+        <EmbeddedResource Include="**\ZIP_test_fake_XLSX.xlsx" />
+        <EmbeddedResource Include="**\ZIP_invalid_archive.docx" />
+        <EmbeddedResource Include="**\DOCM_test_fake_DOCX.docx" />
+        <EmbeddedResource Include="**\XLSM_test_fake_XLSX.xlsx" />
+        <EmbeddedResource Include="**\PPTM_test_fake_PPTX.pptx" />
+        <EmbeddedResource Include="**\DOTX_test_fake_DOCX.docx" />
+        <EmbeddedResource Include="**\XLTX_test_fake_XLSX.xlsx" />
+        <EmbeddedResource Include="**\POTX_test_fake_PPTX.pptx" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="../../src/ByteGuard.FileValidator.AspNetCore/ByteGuard.FileValidator.AspNetCore.csproj" />
+      <ProjectReference Include="../../src/ByteGuard.FileValidator/ByteGuard.FileValidator.csproj" />
+    </ItemGroup>
+
+</Project>

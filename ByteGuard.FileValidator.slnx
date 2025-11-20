@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/ByteGuard.FileValidator.Tests.Unit/ByteGuard.FileValidator.Tests.Unit.csproj" />
+  </Folder>
+  <Project Path="src/ByteGuard.FileValidator/ByteGuard.FileValidator.csproj" />
+</Solution>

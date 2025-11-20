@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net48;net8.0;net9.0;net10.0</TargetFrameworks>
+        <VersionPrefix>0.1.0</VersionPrefix>
+        <Authors>ByteGuard, detilium</Authors>
+        <Owners>detilium</Owners>
+        <Description></Description>
+        <PackageProjectUrl>https://github.com/ByteGuard-HQ/byteguard-file-validator-net</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ByteGuard-HQ/byteguard-file-validator-net</RepositoryUrl>
+        <PackageTags>byteguard, file-validator, security</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+      <Reference Include="System.IO.Compression" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <None Include="..\..\..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+    </ItemGroup>
+
+</Project>
