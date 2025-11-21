@@ -9,6 +9,7 @@ on:
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
+  PR_RUN: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -21,20 +22,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: 10.0.x
-    - name: Compute and set build number
+    # - name: Setup .NET
+    #   uses: actions/setup-dotnet@v5
+    #   with:
+    #     dotnet-version: 10.0.x
+    # - name: Compute and set build number
+    #   shell: bash
+    #   run: |
+    #       echo "CI_BUILD_NUMBER=$(($CI_BUILD_NUMBER_BASE+1000))" >> $GITHUB_ENV
+    - name: TEST PR RUN CHECK
       shell: bash
       run: |
-          echo "CI_BUILD_NUMBER=$(($CI_BUILD_NUMBER_BASE+1000))" >> $GITHUB_ENV
-    - name: Build & Push
-      env:
-        DOTNET_CLI_TELEMTRY_OPTOUT: true
-        DUMMY: ${{ secrets.DUMMY }}
-        # NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      shell: pwsh
-      run: |
-        ./Build.ps1
+          echo "$(($PR_RUN))"
+    # - name: Build & Push
+    #   env:
+    #     DOTNET_CLI_TELEMTRY_OPTOUT: true
+    #     DUMMY: ${{ secrets.DUMMY }}
+    #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   shell: pwsh
+    #   run: |
+    #     ./Build.ps1
