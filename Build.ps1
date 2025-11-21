@@ -57,22 +57,24 @@ try {
         Pop-Location
     }
 
-    if ($env:NUGET_API_KEY) {
+    if ($env:DUMMY) {
         # GitHub Actions will only supply this to branch builds and not PRs. We publish
         # builds from any branch this action targets (i.e. master and dev).
 
-        Write-Output "build: Publishing NuGet package"
+        Write-Output "DUMMY value: $env:DUMMY"
 
-        foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
-            & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
-            if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
-        }
+        # Write-Output "build: Publishing NuGet package"
 
-        if (!($suffix)) {
-            Write-Output "build: Creating release for version $versionPrefix"
+        # foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
+        #     & dotnet nuget push -k $env:NUGET_API_KEY -s https://api.nuget.org/v3/index.json "$nupkg"
+        #     if($LASTEXITCODE -ne 0) { throw "Publishing failed" }
+        # }
 
-            iex "gh release create v$versionPrefix --title v$versionPrefix --generate-notes $(get-item ./artifacts/*.nupkg) $(get-item ./artifacts/*.snupkg)"
-        }
+        # if (!($suffix)) {
+        #     Write-Output "build: Creating release for version $versionPrefix"
+
+        #     iex "gh release create v$versionPrefix --title v$versionPrefix --generate-notes $(get-item ./artifacts/*.nupkg) $(get-item ./artifacts/*.snupkg)"
+        # }
     }
 } finally {
     Pop-Location

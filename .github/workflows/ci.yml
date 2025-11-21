@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0.x
     - name: Compute and set build number
@@ -32,7 +32,8 @@ jobs:
     - name: Build & Push
       env:
         DOTNET_CLI_TELEMTRY_OPTOUT: true
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        DUMMY: ${{ secrets.DUMMY }}
+        # NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       shell: pwsh
       run: |
