@@ -16,6 +16,9 @@ jobs:
     # We need to run on Windows as we're supporting .NET Framework
     runs-on: windows-latest
 
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v5
     - name: Setup .NET ${{ env.NET_VERSION }}
