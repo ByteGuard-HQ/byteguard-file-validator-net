@@ -21,7 +21,7 @@ jobs:
     - name: Setup .NET ${{ env.NET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ env.NET_VERSION }}
+        dotnet-version: 10.0.x
     - name: Compute and set build number
       shell: bash
       run: |
