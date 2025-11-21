@@ -9,7 +9,7 @@ on:
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  TRIGGER: ${{ github.event_name == 'pull_request' }}
+  PR_TRIGGER: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -33,13 +33,13 @@ jobs:
     - name: TEST PR RUN CHECK
       shell: bash
       run: |
-          echo "$TRIGGER"
-    # - name: Build & Push
-    #   env:
-    #     DOTNET_CLI_TELEMTRY_OPTOUT: true
-    #     DUMMY: ${{ secrets.DUMMY }}
-    #     NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-    #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   shell: pwsh
-    #   run: |
-    #     ./Build.ps1
+          echo "$PR_TRIGGER"
+    - name: Build & Push
+      env:
+        DOTNET_CLI_TELEMTRY_OPTOUT: true
+        PR_TRIGGER: ${{ env.PR_TRIGGER }}
+        #NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        #GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: pwsh
+      run: |
+        ./Build.ps1
