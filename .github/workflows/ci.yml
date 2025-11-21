@@ -9,7 +9,7 @@ on:
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  TRIGGER: ${{ github.event_name }}
+  TRIGGER: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
