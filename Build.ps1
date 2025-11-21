@@ -9,6 +9,13 @@ Push-Location $PSScriptRoot
 
 Write-Output "build: PR_TRIGGER value: $env:PR_TRIGGER"
 
+if($env:PR_TRIGGER -eq "true") {
+    Write-Output "build: This is a PR build - skipping packaging and publishing steps"
+    $skipPackaging = $true
+} else {
+    $skipPackaging = $false
+}
+
 # try {
 #     if(Test-Path .\artifacts) {
 #         Write-Output "build: Cleaning ./artifacts"
