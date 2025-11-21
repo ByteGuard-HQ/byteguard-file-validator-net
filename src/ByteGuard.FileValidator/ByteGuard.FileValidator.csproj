@@ -3,13 +3,15 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net48;net8.0;net9.0;net10.0</TargetFrameworks>
         <VersionPrefix>0.1.0</VersionPrefix>
-        <Authors>ByteGuard, detilium</Authors>
-        <Owners>detilium</Owners>
-        <Description></Description>
+        <Authors>ByteGuard Contributors, detilium</Authors>
+        <Description>ByteGuard File Validator is a security-focused .NET library for validating user-supplied files, providing a configurable API to help you enforce safe and consistent file handling across your applications.</Description>
         <PackageProjectUrl>https://github.com/ByteGuard-HQ/byteguard-file-validator-net</PackageProjectUrl>
         <RepositoryUrl>https://github.com/ByteGuard-HQ/byteguard-file-validator-net</RepositoryUrl>
-        <PackageTags>byteguard, file-validator, security</PackageTags>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>byteguard file-validator file-validation file-upload upload-validation security application-security appsec</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Copyright>Copyright © ByteGuard Contributors</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
@@ -17,7 +19,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <None Include="..\..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
     
     <ItemGroup>

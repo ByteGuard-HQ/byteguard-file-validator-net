@@ -226,7 +226,15 @@ namespace ByteGuard.FileValidator
         {
             FileExtensions.Docx,
             FileExtensions.Xlsx,
-            FileExtensions.Pptx,
+            FileExtensions.Pptx
+        };
+
+        /// <summary>
+        /// Specific file extensions for files that are Open Document Format (ODF).
+        /// These require extra care when validating, as ODF files are ZIP-archives and can contain potentially harmful content.
+        /// </summary>
+        private static readonly List<string> OpenDocumentFormats = new List<string>
+        {
             FileExtensions.Odt
         };
 
@@ -300,11 +308,22 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate Open XML conformance for specific file types.
-            if (IsOpenOfficeFormat(fileName) && !IsValidOpenXmlDocument(fileName, content))
+            if (IsOpenXmlFormat(fileName) && !IsValidOpenXmlDocument(fileName, content))
             {
                 if (configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException();
+                }
+
+                return false;
+            }
+
+            // Validate Open Document Format (ODF) for specific file types.
+            if (IsOpenDocumentFormat(fileName) && !IsValidOpenDocumentFormat(fileName, content))
+            {
+                if (configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw new InvalidOpenDocumentFormatException();
                 }
 
                 return false;
@@ -438,18 +457,21 @@ namespace ByteGuard.FileValidator
                 return false;
             }
 
-            // As PDF documents are somewhat special in terms of both signature validation and potentially
-            // embedded files, we need to investigate these files further. The PdfValidator is made specifically
+            // As PDF documents are somewhat special in terms of both signature validation,
+            // we need to investigate these files further. The PdfValidator is made specifically
             // for this purpose.
             if (fileDefinition.FileType.Equals(FileExtensions.Pdf))
             {
-                var isValid = PdfValidator.IsValidPdfSignature(content);
-                if (!isValid && configuration.ThrowExceptionOnInvalidFile)
+                using (var pdfValidator = new PdfValidator(content))
                 {
-                    throw new InvalidSignatureException();
-                }
+                    var isValidPdf = pdfValidator.IsValidPdfSignature();
+                    if (!isValidPdf && configuration.ThrowExceptionOnInvalidFile)
+                    {
+                        throw new InvalidSignatureException();
+                    }
 
-                return isValid;
+                    return isValidPdf;
+                }
             }
 
             // Calculate signature start and end index.
@@ -649,7 +671,7 @@ namespace ByteGuard.FileValidator
         /// but only validates if the provided file is adhering the Open XML format.</para>
         /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
         /// </remarks>
-        /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.docx</c>).</param>
         /// <param name="content">Byte content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
@@ -677,7 +699,7 @@ namespace ByteGuard.FileValidator
             try
             {
                 // If we are not expecting this file type to be an Open XML file, we can just return false.
-                if (!IsOpenOfficeFormat(fileName))
+                if (!IsOpenXmlFormat(fileName))
                 {
                     if (configuration.ThrowExceptionOnInvalidFile)
                     {
@@ -706,11 +728,6 @@ namespace ByteGuard.FileValidator
                         case FileExtensions.Pptx:
                             {
                                 isValid = OpenXmlFormatValidator.IsValidPresentationDocument(memoryStream);
-                                break;
-                            }
-                        case FileExtensions.Odt:
-                            {
-                                isValid = OpenXmlFormatValidator.IsValidOpenDocumentTextDocument(memoryStream);
                                 break;
                             }
                         default:
@@ -774,7 +791,7 @@ namespace ByteGuard.FileValidator
         /// but only validates if the provided file is adhering the Open XML format.</para>
         /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
         /// </remarks>
-        /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.docx</c>).</param>
         /// <param name="stream">Stream content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
@@ -799,7 +816,7 @@ namespace ByteGuard.FileValidator
         /// but only validates if the provided file is adhering the Open XML format.</para>
         /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string)"/>.</para>
         /// </remarks>
-        /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.jpg</c>).</param>
+        /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.docx</c>).</param>
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
@@ -819,6 +836,137 @@ namespace ByteGuard.FileValidator
         }
 
         /// <summary>
+        /// Whether the given Open Document Format (ODF) file is valid based on its type.
+        /// </summary>
+        /// <remarks>
+        /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
+        /// but only validates if the provided file is adhering the Open Document Format specification.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
+        /// </remarks>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="content">Byte content of the file.</param>
+        /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        public bool IsValidOpenDocumentFormat(string fileName, byte[] content)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new ArgumentNullException(nameof(fileName), "File name cannot be null or empty.");
+            }
+
+            var extension = Path.GetExtension(fileName);
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                throw new ArgumentException("Unable to deduct file type (extension) based on the file name.", nameof(fileName));
+            }
+
+            if (content is null || content.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating Open Document Format structure.");
+            }
+
+            try
+            {
+                // If we are not expecting this file type to be an Open XML file, we can just return false.
+                if (!IsOpenDocumentFormat(fileName))
+                {
+                    if (configuration.ThrowExceptionOnInvalidFile)
+                    {
+                        throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format document.");
+                    }
+
+                    return false;
+                }
+
+                bool isValid;
+
+                using (var memoryStream = new MemoryStream(content))
+                {
+                    switch (extension.ToLowerInvariant())
+                    {
+                        case FileExtensions.Odt:
+                            {
+                                isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(memoryStream);
+                                break;
+                            }
+                        default:
+                            throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format file.");
+                    }
+                }
+
+                if (configuration.ThrowExceptionOnInvalidFile && !isValid)
+                {
+                    throw new InvalidOpenDocumentFormatException();
+                }
+
+                return isValid;
+            }
+            catch (InvalidDataException e)
+            {
+                if (configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw new InvalidOpenDocumentFormatException("The provided file is not a valid Open Document Format file. See inner exception for details.", e);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the given Open Document Format (ODF) file is valid based on its type.
+        /// </summary>
+        /// <remarks>
+        /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
+        /// but only validates if the provided file is adhering the Open Document Format specification.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
+        /// </remarks>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="stream">Stream content of the file.</param>
+        /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        public bool IsValidOpenDocumentFormat(string fileName, Stream stream)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                stream.CopyTo(memoryStream);
+
+                memoryStream.Position = 0;
+                var content = memoryStream.ToArray();
+
+                return IsValidOpenDocumentFormat(fileName, content);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given Open Document Format (ODF) file is valid based on its type.
+        /// </summary>
+        /// <remarks>
+        /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
+        /// but only validates if the provided file is adhering the Open Document Format specification.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string)"/>.</para>
+        /// </remarks>
+        /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.odt</c>).</param>
+        /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        public bool IsValidOpenDocumentFormat(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath), "File path cannot be null or empty.");
+            }
+
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                return IsValidOpenDocumentFormat(fileName, fileStream);
+            }
+        }
+
+        /// <summary>
         /// Whether the given file type is expected to be an Open XML file.
         /// </summary>
         /// <remarks>
@@ -826,12 +974,28 @@ namespace ByteGuard.FileValidator
         /// but only validates if the provided file is expected to be an Open XML file.</para>
         /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string)"/> or any of the other possible overloads.</para>
         /// </remarks>
-        /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.jdocx</c>).</param>
         /// <returns><c>true</c> if the given file type is expected to be an Open XML file according to <see cref="OpenXmlFormats"/>, <c>false</c> otherwise.</returns>
-        public bool IsOpenOfficeFormat(string fileName)
+        public bool IsOpenXmlFormat(string fileName)
         {
             var extension = Path.GetExtension(fileName);
             return OpenXmlFormats.Contains(extension.ToLowerInvariant());
+        }
+
+        /// <summary>
+        /// Whether the given file type is expected to be an Open Document Format (ODF) file.
+        /// </summary>
+        /// <remarks>
+        /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
+        /// but only validates if the provided file is expected to be an Open Document Format (ODF) file.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string)"/> or any of the other possible overloads.</para>
+        /// </remarks>
+        /// <param name="fileName">File name including extensions (e.g. <c>my-file.odt</c>).</param>
+        /// <returns><c>true</c> if the given file type is expected to be an Open Document Format (ODF) file according to <see cref="OpenDocumentFormats"/>, <c>false</c> otherwise.</returns>
+        public bool IsOpenDocumentFormat(string fileName)
+        {
+            var extensions = Path.GetExtension(fileName);
+            return OpenDocumentFormats.Contains(extensions.ToLowerInvariant());
         }
 
         /// <summary>

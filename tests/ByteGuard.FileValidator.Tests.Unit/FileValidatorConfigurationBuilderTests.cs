@@ -11,11 +11,11 @@ public class FileValidatorConfigurationBuilderTests
         var builder = new FileValidatorConfigurationBuilder();
 
         // Act
-        builder.AllowFileTypes(".txt", ".jpg");
+        builder.AllowFileTypes(".png", ".jpg");
         var config = builder.Build();
 
         // Assert
-        Assert.Contains(".txt", config.SupportedFileTypes);
+        Assert.Contains(".png", config.SupportedFileTypes);
         Assert.Contains(".jpg", config.SupportedFileTypes);
     }
 

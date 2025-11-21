@@ -6,7 +6,7 @@ It helps you enforce consistent file upload rules by checking:
 -   Allowed file extensions
 -   File size limits
 -   File signatures (magic numbers) to detect spoofed types
--   Internal ZIP structure for Office Open XML / OpenDocument formats (`.docx`,  `.xlsx`,  `.pptx`,  `.odt`)
+-   Specification conformance for Office Open XML / Open Document Formats (`.docx`,  `.xlsx`,  `.pptx`,  `.odt`)
 
 > ⚠️ **Important:** This library should be part of a **defense-in-depth** strategy.  
 It does not replace antivirus scanning, sandboxing, or other security controls.
@@ -16,7 +16,7 @@ It does not replace antivirus scanning, sandboxing, or other security controls.
 - ✅ Validate files by **extension**
 - ✅ Validate files by **size**
 - ✅ Validate files by **signature (_magic-numbers_)**
-- ✅ Validate files by **internal ZIP structure** for archive-based formats (_Open XML and OpenDocument formats_)
+- ✅ Validate files by **specification conformance** for archive-based formats (_Open XML and Open Document Formats_)
 - ✅ Validate using file path, `Stream`, or `byte[]`
 - ✅ Configure which file types to support
 - ✅ Configure whether to **throw exceptions** or simply return a boolean
@@ -51,7 +51,7 @@ var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
 ### Using the fluent builder
 
 ```csharp
-var  configuration = new FileValidatorConfigurationBuilder()
+var configuration = new FileValidatorConfigurationBuilder()
 	.AllowFileTypes(FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png)
 	.SetFileSizeLimit(ByteSize.MegaBytes(25))
 	.SetThrowExceptionOnInvalidFile(false)
@@ -71,13 +71,14 @@ The `FileValidator` class provides methods to validate specific aspects of a fil
 > 1.  Extension validation
 > 2.  File size validation
 > 3.  Signature (magic-number) validation
-> 4.  Optional Open XML / OpenDocument structure validation (for supported types)
+> 4.  Optional Open XML / Open Document Format specification conformance validation (for supported types)
 
 ```csharp
 bool isExtensionValid = fileValidator.IsValidFileType(fileName);
 bool isFileSizeValid = fileValidator.HasValidSize(fileStream);
 bool isSignatureValid = fileValidator.HasValidSignature(fileName, fileStream);
 bool isOpenXmlValid = fileValidator.IsValidOpenXmlDocument(fileName, fileStream);
+bool isOpenDocumentFormatValid = fileValidator.IsValidOpenDocumentFormat(fileName, fileStream);
 ```
 
 ### Example
@@ -137,11 +138,11 @@ The following file extensions are supported by the `FileValidator`:
 
 For some formats, additional checks are performed:
 
-- **Office Open XML / OpenDocument** (`.docx`, `.xlsx`, `.pptx`, `.odt`):  
+- **Office Open XML / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.odt`):  
   - Extension
   - File size
   - Signature
-  - Internal ZIP structure (basic format sanity)
+  - Specification conformance
 
 - **Other binary formats** (e.g. images, audio, video such as `.jpg`, `.png`, `.mp3`, `.mp4`):  
   - Extension
@@ -164,10 +165,12 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 
 | Exception type | Scenario |
 |--|--|
+| `EmptyFileException` | Thrown when the file content is `null` or empty, indicating a file without any content. |
 | `UnsupportedFileException` | Thrown when the file extension is not in the list of supported types. |
 | `InvalidFileSizeException` | Thrown when the file size exceeds the configured file size limit. |
 | `InvalidSignatureException` | Thrown when the file's signature does not match the expected signature for its type. |
 | `InvalidOpenXmlFormatException` | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
+| `InvalidOpenDocumentFormatException` | Thrown when the specification conformance of an Open Document Format file is invalid (`.odt`, etc.). |
 
 ## When to use this package
 
@@ -176,4 +179,4 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 - ✅ When you want **defense-in-depth** against spoofed or malicious files
 
 ## License
-_ByteGuard FileValidator is copyright © ByteGuard Contributors - Provided under the MIT license._
+_ByteGuard FileValidator is Copyright © ByteGuard Contributors - Provided under the MIT license._

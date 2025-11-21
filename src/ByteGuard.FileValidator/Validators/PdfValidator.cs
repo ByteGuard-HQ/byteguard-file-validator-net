@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using ByteGuard.FileValidator.Exceptions;
 
@@ -12,8 +11,18 @@ namespace ByteGuard.FileValidator.Validators
     /// <remarks>
     /// Contains all logic specific to validation of PDF files.
     /// </remarks>
-    internal static class PdfValidator
+    internal class PdfValidator : IDisposable
     {
+        /// <summary>
+        /// Inner stream of the file.
+        /// </summary>
+        private readonly Stream _stream;
+
+        /// <summary>
+        /// Whether the inner stream should be left open during dispose.
+        /// </summary>
+        private readonly bool _leaveOpen;
+
         /// <summary>
         /// Length of the header in which the correct signature can appear.
         /// </summary>
@@ -24,40 +33,35 @@ namespace ByteGuard.FileValidator.Validators
         private const int SignatureCheckLength = 1024;
 
         /// <summary>
-        /// Valid signature of a PDF file (<c>%PDF-</c>).
+        /// String representation of the valid signature of a PDF file (<c>%PDF-</c>).
         /// </summary>
-        private const string ValidSignature = "%PDF-";
+        private const string ValidSignatureString = "%PDF-";
 
         /// <summary>
-        /// Whether the file signature is valid for the given PDF document.
+        /// Instantiate a new <see cref="PdfValidator"/> instance from a stream.
         /// </summary>
-        /// <remarks>
-        /// Verifies that the file signature within the first 1024 bytes, contains the required %PDF- content.
-        /// </remarks>
-        /// <param name="content">Byte content.</param>
-        /// <returns><c>true</c> if the signature is valid, <c>false</c> otherwise.</returns>
-        /// <exception cref="EmptyFileException">Thrown if the provided stream is null or has no content.</exception>
-        internal static bool IsValidPdfSignature(byte[] content)
+        /// <param name="stream">Content stream</param>
+        /// <param name="leaveOpen">Whether the stream should be closed during dispose.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</exception>
+        public PdfValidator(Stream stream, bool leaveOpen = false)
         {
-            if (content == null || content.Length == 0)
+            if (stream == null || stream.Length == 0)
             {
-                throw new EmptyFileException();
+                throw new ArgumentNullException(nameof(stream));
             }
 
-            // Only read the necessary bytes into a new byte[].
-            var data = content.Take(SignatureCheckLength).ToArray();
+            _stream = stream;
+            _leaveOpen = leaveOpen;
+        }
 
-            // Look for the valid signature.
-            var headerContent = Encoding.UTF8.GetString(data);
-            var index = headerContent.IndexOf(ValidSignature, StringComparison.Ordinal);
-
-            // If not found (we didn't find "%PDF-" anywhere in the first 1024 bytes) this is not a valid PDF.
-            if (index < 0)
-            {
-                return false;
-            }
-
-            return true;
+        /// <summary>
+        /// Instantiate a new <see cref="PdfValidator"/> instance from a byte array.
+        /// </summary>
+        /// <param name="content">Byte array content.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="content"/> is <c>null</c> or empty.</exception>
+        public PdfValidator(byte[] content)
+            : this(new MemoryStream(content), leaveOpen: false)
+        {
         }
 
         /// <summary>
@@ -66,23 +70,30 @@ namespace ByteGuard.FileValidator.Validators
         /// <remarks>
         /// Verifies that the file signature within the first 1024 bytes, contains the required %PDF- content.
         /// </remarks>
-        /// <param name="contentStream">Stream.</param>
         /// <returns><c>true</c> if the signature is valid, <c>false</c> otherwise.</returns>
         /// <exception cref="EmptyFileException">Thrown if the provided stream is null or has no content.</exception>
-        internal static bool IsValidPdfSignature(Stream contentStream)
+        internal bool IsValidPdfSignature()
         {
-            if (contentStream == null || contentStream.Length == 0)
-            {
-                throw new EmptyFileException();
-            }
-
-            contentStream.Seek(0, SeekOrigin.Begin);
+            _stream.Seek(0, SeekOrigin.Begin);
 
             // Only read the necessary bytes into a new byte[].
             var data = new byte[SignatureCheckLength];
-            _ = contentStream.Read(data, 0, SignatureCheckLength);
+            _ = _stream.Read(data, 0, SignatureCheckLength);
 
-            return IsValidPdfSignature(data);
+            // Look for the valid signature.
+            var headerContent = Encoding.ASCII.GetString(data);
+            var index = headerContent.IndexOf(ValidSignatureString, StringComparison.Ordinal);
+
+            // If nout found (we didn't find %PDF- anywhere within the first 1024 bytes) this is not a valid PDF.
+            return index >= 0;
+        }
+
+        public void Dispose()
+        {
+            if (!_leaveOpen)
+            {
+                _stream?.Dispose();
+            }
         }
     }
 }

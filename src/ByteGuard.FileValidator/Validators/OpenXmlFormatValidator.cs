@@ -3,7 +3,6 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using ByteGuard.FileValidator.Exceptions;
 
@@ -13,7 +12,7 @@ namespace ByteGuard.FileValidator.Validators
     /// Open XML format validator.
     /// </summary>
     /// <remarks>
-    /// Common validation for Open XML format documents incl. Word, Excel, PowerPoint, and ODT.
+    /// Common validation for Microsoft Open XML format documents incl. Word, Excel, and PowerPoint.
     /// </remarks>
     internal static class OpenXmlFormatValidator
     {
@@ -26,7 +25,7 @@ namespace ByteGuard.FileValidator.Validators
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, templates).</exception>
         internal static bool IsValidWordDocument(Stream stream)
         {
-            if (stream == null)
+            if (stream == null || stream.Length == 0)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -66,7 +65,7 @@ namespace ByteGuard.FileValidator.Validators
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, add-ins, templates).</exception>
         internal static bool IsValidSpreadsheetDocument(Stream stream)
         {
-            if (stream == null)
+            if (stream == null || stream.Length == 0)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -112,7 +111,7 @@ namespace ByteGuard.FileValidator.Validators
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, add-ins, templates).</exception>
         internal static bool IsValidPresentationDocument(Stream stream)
         {
-            if (stream == null)
+            if (stream == null || stream.Length == 0)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -142,34 +141,6 @@ namespace ByteGuard.FileValidator.Validators
                 // Validate structure.
                 var validator = new OpenXmlValidator();
                 if (validator.Validate(presentationDocument).Any())
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Whether the given content stream is a valid OpenDocument Text file.
-        /// </summary>
-        /// <param name="stream">Stream in question.</param>
-        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if the provided stream is null.</exception>
-        internal static bool IsValidOpenDocumentTextDocument(Stream stream)
-        {
-            if (stream == null)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            // Check for the presence of the mimetype file and the content.xml file.
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-            {
-                var mimetypeFile = archive.GetEntry("mimetype");
-                var contentXml = archive.GetEntry("content.xml");
-
-                if (mimetypeFile == null || contentXml == null)
                 {
                     return false;
                 }

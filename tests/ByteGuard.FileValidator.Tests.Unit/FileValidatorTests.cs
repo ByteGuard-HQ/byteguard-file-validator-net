@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
-using Microsoft.Extensions.Options;
 
 namespace ByteGuard.FileValidator.Tests.Unit;
 
@@ -196,26 +195,6 @@ public class FileValidatorTests
 
         // Assert
         Assert.False(result);
-    }
-
-    [Fact(DisplayName = "HasValidSignature(byte[]) should return true if the file type is a txt file regardless of content")]
-    public void HasValidSignature_TxtFile_ShouldReturnTrueRegardlessOfContent()
-    {
-        // Arrange
-        var config = new FileValidatorConfiguration
-        {
-            SupportedFileTypes = [".txt"],
-            FileSizeLimit = ByteSize.MegaBytes(25),
-            ThrowExceptionOnInvalidFile = true
-        };
-        var fileValidator = new FileValidator(config);
-        var fileBytes = new byte[] { 0x00, 0x01, 0x02, 0x03 };
-
-        // Act
-        var result = fileValidator.HasValidSignature("document.txt", fileBytes);
-
-        // Assert
-        Assert.True(result);
     }
 
     [Theory(DisplayName = "HasValidSignature(byte[]) should throw ArgumentNullException when fileBytes is null or empty")]
@@ -436,11 +415,11 @@ public class FileValidatorTests
         Assert.Throws<ArgumentException>(act);
     }
 
-    [Theory(DisplayName = "IsOpenOfficeFormat should return true for valid Open XML files")]
+    [Theory(DisplayName = "IsOpenXmlFormat should return true for valid Open XML files")]
     [InlineData("test.docx")] // DOCX
     [InlineData("test.xlsx")] // XLSX
     [InlineData("test.pptx")] // PPTX
-    public void IsOpenOfficeFormat_ValidOpenXmlFiles_ShouldReturnTrue(string fileName)
+    public void IsOpenXmlFormat_ValidOpenXmlFiles_ShouldReturnTrue(string fileName)
     {
         // Arrange
         var config = new FileValidatorConfiguration
@@ -452,17 +431,37 @@ public class FileValidatorTests
         var fileValidator = new FileValidator(config);
 
         // Act
-        var result = fileValidator.IsOpenOfficeFormat(fileName);
+        var result = fileValidator.IsOpenXmlFormat(fileName);
 
         // Assert
         Assert.True(result);
     }
 
-    [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should return false if the file type is not expected to be an Open XML file and ThrowExceptionOnInvalidFile is false")]
+    [Theory(DisplayName = "IsOpenDocumentFormat should return true for valid ODF files")]
+    [InlineData("test.odt")] // ODT
+    public void IsOpenDocumentFormat_ValidOpenDocumentFiles_ShouldReturnTrue(string fileName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Act
+        var result = fileValidator.IsOpenDocumentFormat(fileName);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory(DisplayName = "IsOpenXmlFormat(byte[]) should return false if the file type is not expected to be an Open XML file and ThrowExceptionOnInvalidFile is false")]
     [InlineData("test.pdf")]
     [InlineData("test.jpg")]
     [InlineData("test.png")]
-    public void IsValidOpenXmlDocument_FileTypeNotExpectedToBeAnOpenXmlFileAndThrowExceptionOnInvalidFileIsFalse_ShouldReturnFalse(string fileName)
+    public void IsOpenXmlFormat_FileTypeNotExpectedToBeAnOpenXmlFileAndThrowExceptionOnInvalidFileIsFalse_ShouldReturnFalse(string fileName)
     {
         // Arrange
         var config = new FileValidatorConfiguration
@@ -474,7 +473,7 @@ public class FileValidatorTests
         var fileValidator = new FileValidator(config);
 
         // Act
-        var result = fileValidator.IsOpenOfficeFormat(fileName);
+        var result = fileValidator.IsOpenXmlFormat(fileName);
 
         // Assert
         Assert.False(result);
@@ -504,7 +503,6 @@ public class FileValidatorTests
 
     [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should return true for valid Open XML files")]
     [InlineData("DOCX_test.docx")]
-    [InlineData("ODT_test.odt")]
     [InlineData("PPTX_test.pptx")]
     [InlineData("XLSX_test.xlsx")]
     public void IsValidOpenXmlDocument_ValidOpenXmlFiles_ShouldReturnTrue(string fileName)
@@ -540,7 +538,6 @@ public class FileValidatorTests
 
     [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should return false for invalid Open XML files if ThrowExceptionOnInvalidFile is false")]
     [InlineData("ZIP_test_fake_DOCX.docx")]
-    [InlineData("ZIP_test_fake_ODT.odt")]
     [InlineData("ZIP_test_fake_PPTX.pptx")]
     [InlineData("ZIP_test_fake_XLSX.xlsx")]
     public void IsValidOpenXmlDocument_InvalidOpenXmlFilesAndThrowExceptionOnInvalidFileIsFalse_ShouldReturnFalse(string fileName)
@@ -574,9 +571,8 @@ public class FileValidatorTests
         Assert.False(result);
     }
 
-    [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should throw InvalidOpenXmlArchiveException for invalid Open XML files")]
+    [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should throw InvalidOpenXmlFormatException for invalid Open XML files")]
     [InlineData("ZIP_test_fake_DOCX.docx")]
-    [InlineData("ZIP_test_fake_ODT.odt")]
     [InlineData("ZIP_test_fake_PPTX.pptx")]
     [InlineData("ZIP_test_fake_XLSX.xlsx")]
     public void IsValidOpenXmlDocument_InvalidOpenXmlFiles_ShouldThrowInvalidOpenXmlFormatException(string fileName)
@@ -608,6 +604,105 @@ public class FileValidatorTests
 
         // Assert
         Assert.Throws<InvalidOpenXmlFormatException>(act);
+    }
+
+    [Theory(DisplayName = "IsValidOpenDocumentFormat(byte[]) should return true for valid ODF files")]
+    [InlineData("ODT_test.odt")]
+    public void IsValidOpenDocumentFormat_ValidOpenOpenDocumentFormatFiles_ShouldReturnTrue(string fileName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Load file from embedded resources
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+            throw new InvalidOperationException("Embedded resource not found.");
+
+        using var reader = new StreamReader(stream);
+        using var memoryStream = new MemoryStream();
+        reader.BaseStream.CopyTo(memoryStream);
+
+        var content = memoryStream.ToArray();
+
+        // Act
+        var result = fileValidator.IsValidOpenDocumentFormat(fileName, content);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Theory(DisplayName = "IsValidOpenDocumentFormat(byte[]) should return false for invalid ODF files if ThrowExceptionOnInvalidFile is false")]
+    [InlineData("ZIP_test_fake_ODT.odt")]
+    public void IsValidOpenDocumentFormat_InvalidOpenDocumentFormatFilesAndThrowExceptionOnInvalidFileIsFalse_ShouldReturnFalse(string fileName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = false
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Load file from embedded resources
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+            throw new InvalidOperationException("Embedded resource not found.");
+
+        using var reader = new StreamReader(stream);
+        using var memoryStream = new MemoryStream();
+        reader.BaseStream.CopyTo(memoryStream);
+
+        var content = memoryStream.ToArray();
+
+        // Act
+        var result = fileValidator.IsValidOpenDocumentFormat(fileName, content);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Theory(DisplayName = "IsValidOpenDocumentFormat(byte[]) should throw InvalidOpenDocumentFormatException for invalid ODF files")]
+    [InlineData("ZIP_test_fake_ODT.odt")]
+    public void IsValidOpenDocumentFormat_InvalidOpenDocumentFormatFiles_ShouldThrowInvalidOpenDocumentFormatException(string fileName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Load file from embedded resources
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+            throw new InvalidOperationException("Embedded resource not found.");
+
+        using var reader = new StreamReader(stream);
+        using var memoryStream = new MemoryStream();
+        reader.BaseStream.CopyTo(memoryStream);
+
+        var content = memoryStream.ToArray();
+
+        // Act
+        Action act = () => fileValidator.IsValidOpenDocumentFormat(fileName, content);
+
+        // Assert
+        Assert.Throws<InvalidOpenDocumentFormatException>(act);
     }
 
     [Theory(DisplayName = "IsValidOpenXmlDocument(byte[]) should throw InvalidOpenXmlFormatException for Open XML files containing macros")]
@@ -780,13 +875,11 @@ public class FileValidatorTests
         Assert.Equal(expectedResult, result);
     }
 
-    [Theory(DisplayName = "IsValidFile(string, byte[]) should validate OPen XML files")]
+    [Theory(DisplayName = "IsValidFile(string, byte[]) should validate Open XML files")]
     [InlineData("DOCX_test.docx", true)] // Valid DOCX
-    [InlineData("ODT_test.odt", true)] // Valid ODT
     [InlineData("PPTX_test.pptx", true)] // Valid PPTX
     [InlineData("XLSX_test.xlsx", true)] // Valid XLSX
     [InlineData("ZIP_test_fake_DOCX.docx", false)] // Invalid DOCX
-    [InlineData("ZIP_test_fake_ODT.odt", false)] // Invalid ODT
     [InlineData("ZIP_test_fake_PPTX.pptx", false)] // Invalid PPTX
     [InlineData("ZIP_test_fake_XLSX.xlsx", false)] // Invalid XLSX
     public void IsValidFile_ValidateOpenXmlFiles(string fileName, bool expectedResult)
@@ -794,7 +887,41 @@ public class FileValidatorTests
         // Arrange
         var config = new FileValidatorConfiguration
         {
-            SupportedFileTypes = [".docx", ".odt", ".pptx", ".xlsx"],
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = false
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Load file from embedded resources
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+            throw new InvalidOperationException("Embedded resource not found.");
+
+        using var reader = new StreamReader(stream);
+        using var memoryStream = new MemoryStream();
+        reader.BaseStream.CopyTo(memoryStream);
+
+        var content = memoryStream.ToArray();
+
+        // Act
+        var result = fileValidator.IsValidFile(fileName, content);
+
+        // Assert
+        Assert.Equal(expectedResult, result);
+    }
+
+    [Theory(DisplayName = "IsValidFile(string, byte[]) should validate Open XML files")]
+    [InlineData("ODT_test.odt", true)] // Valid ODT
+    [InlineData("ZIP_test_fake_ODT.odt", false)] // Invalid ODT
+    public void IsValidFile_ValidateOpenDocumentFormatFiles(string fileName, bool expectedResult)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = false
         };
@@ -844,7 +971,6 @@ public class FileValidatorTests
 
     [Theory(DisplayName = "IsValidFile(string, byte[]) should throw InvalidOpenXmlFormatException for invalid Open XML files")]
     [InlineData("ZIP_test_fake_DOCX.docx")] // Invalid DOCX
-    [InlineData("ZIP_test_fake_ODT.odt")] // Invalid ODT
     [InlineData("ZIP_test_fake_PPTX.pptx")] // Invalid PPTX
     [InlineData("ZIP_test_fake_XLSX.xlsx")] // Invalid XLSX
     public void IsValidFile_InvalidOpenXmlFiles_ShouldThrowInvalidOpenXmlFormatException(string fileName)
@@ -852,7 +978,7 @@ public class FileValidatorTests
         // Arrange
         var config = new FileValidatorConfiguration
         {
-            SupportedFileTypes = [".docx", ".odt", ".pptx", ".xlsx"],
+            SupportedFileTypes = [Path.GetExtension(fileName)],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = true
         };
@@ -876,6 +1002,39 @@ public class FileValidatorTests
 
         // Assert
         Assert.Throws<InvalidOpenXmlFormatException>(act);
+    }
+
+    [Theory(DisplayName = "IsValidFile(string, byte[]) should throw InvalidOpenDocumentFormatException for invalid ODF files")]
+    [InlineData("ZIP_test_fake_ODT.odt")] // Invalid ODT
+    public void IsValidFile_InvalidOpenDocumentFormatFiles_ShouldThrowInvalidOpenDocumentFormatException(string fileName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [Path.GetExtension(fileName)],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config);
+
+        // Load file from embedded resources
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(fileName));
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+            throw new InvalidOperationException("Embedded resource not found.");
+
+        using var reader = new StreamReader(stream);
+        using var memoryStream = new MemoryStream();
+        reader.BaseStream.CopyTo(memoryStream);
+
+        var content = memoryStream.ToArray();
+
+        // Act
+        Action act = () => fileValidator.IsValidFile(fileName, content);
+
+        // Assert
+        Assert.Throws<InvalidOpenDocumentFormatException>(act);
     }
 
     [Theory(DisplayName = "IsValidFile(string, byte[]) should throw InvalidFileSizeException for files exceeding the file size limit")]
