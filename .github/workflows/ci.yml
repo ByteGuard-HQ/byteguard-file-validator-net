@@ -9,7 +9,7 @@ on:
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
   CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
-  PR_RUN: ${{ github.event_name == 'pull_request' }}
+  TRIGGER: ${{ github.event_name }}
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
     - name: TEST PR RUN CHECK
       shell: bash
       run: |
-          echo "$(($PR_RUN))"
+          echo "$(($TRIGGER))"
     # - name: Build & Push
     #   env:
     #     DOTNET_CLI_TELEMTRY_OPTOUT: true
