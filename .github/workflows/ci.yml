@@ -33,7 +33,7 @@ jobs:
     - name: TEST PR RUN CHECK
       shell: bash
       run: |
-          echo "$(($TRIGGER))"
+          echo "$TRIGGER"
     # - name: Build & Push
     #   env:
     #     DOTNET_CLI_TELEMTRY_OPTOUT: true
