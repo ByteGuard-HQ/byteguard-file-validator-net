@@ -1,13 +1,14 @@
 # This workflow will build a .NET project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
-name: .NET
+name: Build & test
 
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+
+env:
+  NET_VERSION: 10.x
 
 jobs:
   build:
@@ -16,10 +17,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup .NET
+    - name: Setup .NET ${{ env.NET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: ${{ env.NET_VERSION }}
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
