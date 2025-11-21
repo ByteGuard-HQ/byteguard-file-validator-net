@@ -1,0 +1,35 @@
+name: Continout Integration
+
+on:
+  push:
+    branches: [ "dev", "master" ]
+  pull_requests:
+    branches: [ "dev", "master" ]
+
+env:
+  CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
+  CI_TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  build:
+
+    # We need to run on Windows as we're supporting .NET Framework
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v5
+    - name: Setup .NET ${{ env.NET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.NET_VERSION }}
+    - name: Compute and set build number
+      shell: bash
+      run: |
+          echo "CI_BUILD_NUMBER=$(($CI_BUILD_NUMBER_BASE+1000))" >> $GITHUB_ENV
+    - name: Build & Push
+      env:
+        DOTNET_CLI_TELEMTRY_OPTOUT: true
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      shell: pwsh
+      run: |
+        ./Build.ps1
