@@ -1,5 +1,5 @@
 
-# ByteGuard File Validator
+# ByteGuard File Validator ![NuGet Version](https://img.shields.io/nuget/v/ByteGuard.FileValidator)
 
 **ByteGuard.FileValidator** is a lightweight security-focused library for validating user-supplied files in .NET applications.  
 It helps you enforce consistent file upload rules by checking:

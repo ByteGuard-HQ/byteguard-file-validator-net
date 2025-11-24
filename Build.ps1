@@ -6,6 +6,13 @@ dotnet --list-sdks
 Write-Output "build: Build started"
 
 Push-Location $PSScriptRoot
+
+if($env:PR_TRIGGER -eq "true") {
+    $skipPackaging = $true
+} else {
+    $skipPackaging = $false
+}
+
 try {
     if(Test-Path .\artifacts) {
         Write-Output "build: Cleaning ./artifacts"
@@ -57,10 +64,7 @@ try {
         Pop-Location
     }
 
-    if ($env:NUGET_API_KEY) {
-        # GitHub Actions will only supply this to branch builds and not PRs. We publish
-        # builds from any branch this action targets (i.e. master and dev).
-
+    if ($skipPackaging -eq $false) {
         Write-Output "build: Publishing NuGet package"
 
         foreach ($nupkg in Get-ChildItem artifacts/*.nupkg) {
@@ -73,6 +77,8 @@ try {
 
             iex "gh release create v$versionPrefix --title v$versionPrefix --generate-notes $(get-item ./artifacts/*.nupkg) $(get-item ./artifacts/*.snupkg)"
         }
+    } else {
+        Write-Output "build: Skipping publishing steps for PR build"
     }
 } finally {
     Pop-Location
