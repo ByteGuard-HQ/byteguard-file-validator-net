@@ -10,7 +10,7 @@ public class FileValidatorTests
     public void Constructor_ShouldThrowArgumentNullException_WhenConfigurationIsNotProvided()
     {
         // Act
-        Action act = () => new FileValidator(null);
+        Action act = () => new FileValidator(null!);
 
         // Assert
         Assert.Throws<ArgumentNullException>(act);

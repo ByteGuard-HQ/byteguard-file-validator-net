@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
 using ByteGuard.FileValidator.Models;
@@ -241,17 +237,17 @@ namespace ByteGuard.FileValidator
         /// <summary>
         /// File validator configuration instance.
         /// </summary>
-        private readonly FileValidatorConfiguration configuration;
+        private readonly FileValidatorConfiguration _configuration;
 
         /// <summary>
-        /// Instantiate a new instance of the file validator with the given configuration.
+        /// Instantiate a new instance of the file validator.
         /// </summary>
         /// <param name="configuration">Configuration including which files should be supported and whether an exception should be thrown when encountering an invalid file.</param>
         public FileValidator(FileValidatorConfiguration configuration)
         {
             ConfigurationValidator.ThrowIfInvalid(configuration);
 
-            this.configuration = configuration;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -260,7 +256,7 @@ namespace ByteGuard.FileValidator
         /// <returns>All supported file types as per the configuration.</returns>
         public List<string> GetSupportedFileTypes()
         {
-            return configuration.SupportedFileTypes;
+            return _configuration.SupportedFileTypes;
         }
 
         /// <summary>
@@ -277,7 +273,7 @@ namespace ByteGuard.FileValidator
             // Validate file type.
             if (!IsValidFileType(fileName))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -288,7 +284,7 @@ namespace ByteGuard.FileValidator
             // Validate file size.
             if (!HasValidSize(content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -299,7 +295,7 @@ namespace ByteGuard.FileValidator
             // Validate file signature.
             if (!HasValidSignature(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException();
                 }
@@ -310,7 +306,7 @@ namespace ByteGuard.FileValidator
             // Validate Open XML conformance for specific file types.
             if (IsOpenXmlFormat(fileName) && !IsValidOpenXmlDocument(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException();
                 }
@@ -321,7 +317,7 @@ namespace ByteGuard.FileValidator
             // Validate Open Document Format (ODF) for specific file types.
             if (IsOpenDocumentFormat(fileName) && !IsValidOpenDocumentFormat(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException();
                 }
@@ -398,10 +394,10 @@ namespace ByteGuard.FileValidator
         public bool IsValidFileType(string fileName)
         {
             var extension = Path.GetExtension(fileName).ToLowerInvariant();
-            var isSupported = configuration.SupportedFileTypes.Contains(extension, StringComparer.InvariantCultureIgnoreCase) &&
+            var isSupported = _configuration.SupportedFileTypes.Contains(extension, StringComparer.InvariantCultureIgnoreCase) &&
                 SupportedFileDefinitions.Any(fd => fd.FileType.Equals(extension, StringComparison.InvariantCultureIgnoreCase));
 
-            if (!isSupported && configuration.ThrowExceptionOnInvalidFile)
+            if (!isSupported && _configuration.ThrowExceptionOnInvalidFile)
             {
                 throw new UnsupportedFileException();
             }
@@ -449,7 +445,7 @@ namespace ByteGuard.FileValidator
                 fd.FileType.Equals(extension, StringComparison.InvariantCultureIgnoreCase));
             if (fileDefinition == null)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -465,7 +461,7 @@ namespace ByteGuard.FileValidator
                 using (var pdfValidator = new PdfValidator(content))
                 {
                     var isValidPdf = pdfValidator.IsValidPdfSignature();
-                    if (!isValidPdf && configuration.ThrowExceptionOnInvalidFile)
+                    if (!isValidPdf && _configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidSignatureException();
                     }
@@ -481,7 +477,7 @@ namespace ByteGuard.FileValidator
             // Check whether the content is valid according to the primary header signature length.
             if (content.Length < signatureEnd)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException("File content is too short to contain a valid signature.");
                 }
@@ -497,7 +493,7 @@ namespace ByteGuard.FileValidator
             // Might as well return early as the subtype check is irrelevant if the primary signature is invalid.
             if (!result)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException();
                 }
@@ -515,7 +511,7 @@ namespace ByteGuard.FileValidator
                 // Check whether the content is valid according to the primary header signature length.
                 if (content.Length < subtypeSignatureEnd)
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidSignatureException("File content is too short to contain a valid subtype signature.");
                     }
@@ -529,7 +525,7 @@ namespace ByteGuard.FileValidator
                 result = fileDefinition.ValidSubtypeSignatures.Any(signature => subtypeHeaderBytes.Take(signature.Length).SequenceEqual(signature));
             }
 
-            if (!result && configuration.ThrowExceptionOnInvalidFile)
+            if (!result && _configuration.ThrowExceptionOnInvalidFile)
             {
                 throw new InvalidSignatureException();
             }
@@ -605,9 +601,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
         public bool HasValidSize(byte[] content)
         {
-            var isBelowLimit = content.Length <= configuration.FileSizeLimit;
+            var isBelowLimit = content.Length <= _configuration.FileSizeLimit;
 
-            if (configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
+            if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
                 throw new InvalidFileSizeException();
             }
@@ -628,9 +624,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
         public bool HasValidSize(Stream stream)
         {
-            var isBelowLimit = stream.Length <= configuration.FileSizeLimit;
+            var isBelowLimit = stream.Length <= _configuration.FileSizeLimit;
 
-            if (configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
+            if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
                 throw new InvalidFileSizeException();
             }
@@ -701,7 +697,7 @@ namespace ByteGuard.FileValidator
                 // If we are not expecting this file type to be an Open XML file, we can just return false.
                 if (!IsOpenXmlFormat(fileName))
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidOpenXmlFormatException("The provided file extension is not recognized as an Open XML document.");
                     }
@@ -735,7 +731,7 @@ namespace ByteGuard.FileValidator
                     }
                 }
 
-                if (configuration.ThrowExceptionOnInvalidFile && !isValid)
+                if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
                 {
                     throw new InvalidOpenXmlFormatException();
                 }
@@ -744,7 +740,7 @@ namespace ByteGuard.FileValidator
             }
             catch (InvalidDataException e)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("The provided file is not a valid Open XML file. See inner exception for details.", e);
                 }
@@ -754,7 +750,7 @@ namespace ByteGuard.FileValidator
             catch (FileFormatException e)
             {
                 // Thrown if the content is corrupt.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("File content appears to be corrupt. Se inner exception for details.", e);
                 }
@@ -764,7 +760,7 @@ namespace ByteGuard.FileValidator
             catch (OpenXmlPackageException e)
             {
                 // Thrown if the content is not valid Open XML.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("Content does not appear to be valid Open XML format. See inner exception for details.", e);
                 }
@@ -774,7 +770,7 @@ namespace ByteGuard.FileValidator
             catch (InvalidOpenXmlFormatException)
             {
                 // Exceptions throw from within the Open XML format validator.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw;
                 }
@@ -872,7 +868,7 @@ namespace ByteGuard.FileValidator
                 // If we are not expecting this file type to be an Open XML file, we can just return false.
                 if (!IsOpenDocumentFormat(fileName))
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format document.");
                     }
@@ -896,7 +892,7 @@ namespace ByteGuard.FileValidator
                     }
                 }
 
-                if (configuration.ThrowExceptionOnInvalidFile && !isValid)
+                if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
                 {
                     throw new InvalidOpenDocumentFormatException();
                 }
@@ -905,7 +901,7 @@ namespace ByteGuard.FileValidator
             }
             catch (InvalidDataException e)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException("The provided file is not a valid Open Document Format file. See inner exception for details.", e);
                 }

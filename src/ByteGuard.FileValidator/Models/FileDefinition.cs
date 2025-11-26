@@ -10,7 +10,7 @@ namespace ByteGuard.FileValidator.Models
         /// <summary>
         /// File type in question (e.g. .jpw, .png, .pdf, etc).
         /// </summary>
-        public string FileType { get; set; }
+        public string FileType { get; set; } = default!;
 
         /// <summary>
         /// Valid header signatures.

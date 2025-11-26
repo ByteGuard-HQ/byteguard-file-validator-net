@@ -42,7 +42,7 @@ namespace ByteGuard.FileValidator.Configuration
         /// </ul>
         /// </para>
         /// </remarks>
-        public string FriendlyFileSizeLimit { get; set; }
+        public string FriendlyFileSizeLimit { get; set; } = default!;
 
         /// <summary>
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
