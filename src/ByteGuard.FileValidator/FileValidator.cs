@@ -328,20 +328,15 @@ namespace ByteGuard.FileValidator
             // Validate antimalware scan if configured.
             if (_configuration.AntimalwareScanner != null)
             {
-                using (var memoryStream = new MemoryStream(content))
+                var isClean = IsMalwareClean(fileName, content);
+                if (!isClean)
                 {
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-
-                    var isClean = _configuration.AntimalwareScanner.IsClean(memoryStream, fileName);
-                    if (!isClean)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
-                        if (_configuration.ThrowExceptionOnInvalidFile)
-                        {
-                            throw new MalwareDetectedException();
-                        }
-
-                        return false;
+                        throw new MalwareDetectedException();
                     }
+
+                    return false;
                 }
             }
 
@@ -969,6 +964,96 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenDocumentFormat(string filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath), "File path cannot be null or empty.");
+            }
+
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                return IsValidOpenDocumentFormat(fileName, fileStream);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="content">Byte content of the file.</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string fileName, byte[] content)
+        {
+            if (_configuration.AntimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
+            using (var memoryStream = new MemoryStream(content))
+            {
+                return IsMalwareClean(fileName, memoryStream);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="stream">Stream content of the file.</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string fileName, Stream stream)
+        {
+            if (_configuration.AntimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            try
+            {
+                var isClean = _configuration.AntimalwareScanner.IsClean(stream, fileName);
+                if (!isClean)
+                {
+                    if (_configuration.ThrowExceptionOnInvalidFile)
+                    {
+                        throw new MalwareDetectedException();
+                    }
+
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new AntimalwareScannerException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.odt</c>).</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string filePath)
+        {
+            if (_configuration.AntimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentNullException(nameof(filePath), "File path cannot be null or empty.");
