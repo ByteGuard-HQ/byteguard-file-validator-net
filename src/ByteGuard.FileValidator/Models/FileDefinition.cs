@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ByteGuard.FileValidator.Models
+﻿namespace ByteGuard.FileValidator.Models
 {
     /// <summary>
     /// Definition of filetype, their valid signatures, and potentially their valid subtype signatures.
@@ -10,7 +8,7 @@ namespace ByteGuard.FileValidator.Models
         /// <summary>
         /// File type in question (e.g. .jpw, .png, .pdf, etc).
         /// </summary>
-        public string FileType { get; set; }
+        public string FileType { get; set; } = default!;
 
         /// <summary>
         /// Valid header signatures.

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -10,6 +10,7 @@ namespace ByteGuard.FileValidator.Configuration
         private readonly List<string> supportedFileTypes = new List<string>();
         private bool throwOnInvalidFiles = true;
         private long fileSizeLimit = ByteSize.MegaBytes(25);
+        private IAntimalwareScanner? antimalwareScanner = null;
 
         /// <summary>
         /// Allow specific file types (extensions) to be validated.
@@ -44,6 +45,22 @@ namespace ByteGuard.FileValidator.Configuration
         }
 
         /// <summary>
+        /// Add an antimalware scanner.
+        /// </summary>
+        /// <param name="scanner">Antimalware scanner to use.</param>
+        /// <exception cref="ArgumentNullException">Thrown when the provided scanner is null.</exception>
+        public FileValidatorConfigurationBuilder AddAntimalwareScanner(IAntimalwareScanner scanner)
+        {
+            if (scanner == null)
+            {
+                throw new ArgumentNullException(nameof(scanner));
+            }
+
+            antimalwareScanner = scanner;
+            return this;
+        }
+
+        /// <summary>
         /// Build configuration.
         /// </summary>
         /// <returns>File validator configurations object.</returns>
@@ -53,7 +70,8 @@ namespace ByteGuard.FileValidator.Configuration
             {
                 SupportedFileTypes = supportedFileTypes,
                 ThrowExceptionOnInvalidFile = throwOnInvalidFiles,
-                FileSizeLimit = fileSizeLimit
+                FileSizeLimit = fileSizeLimit,
+                AntimalwareScanner = antimalwareScanner
             };
 
             ConfigurationValidator.ThrowIfInvalid(configuration);
