@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
-
-namespace ByteGuard.FileValidator.Exceptions
+﻿namespace ByteGuard.FileValidator.Exceptions
 {
     /// <summary>
     /// Exception type used specifically when a given file exceeds the configured file size limit. 

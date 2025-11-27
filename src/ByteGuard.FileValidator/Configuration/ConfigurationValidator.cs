@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using ByteGuard.FileValidator.Exceptions;
+﻿using ByteGuard.FileValidator.Exceptions;
 
 namespace ByteGuard.FileValidator.Configuration
 {

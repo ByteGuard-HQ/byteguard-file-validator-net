@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ByteGuard.FileValidator.Models
+﻿namespace ByteGuard.FileValidator.Models
 {
     /// <summary>
     /// Definition of filetype, their valid signatures, and potentially their valid subtype signatures.

@@ -1,5 +1,3 @@
-using System;
-
 namespace ByteGuard.FileValidator.Exceptions
 {
     /// <summary>

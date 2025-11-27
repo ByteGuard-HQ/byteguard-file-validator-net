@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ByteGuard.FileValidator.Exceptions
+﻿namespace ByteGuard.FileValidator.Exceptions
 {
     /// <summary>
     /// Exception type used specifically when a given file is invalid based on signature.

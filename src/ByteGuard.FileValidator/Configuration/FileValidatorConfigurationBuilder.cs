@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ByteGuard.FileValidator.Configuration
+﻿namespace ByteGuard.FileValidator.Configuration
 {
     /// <summary>
     /// File validator configurations fluent API builder.
