@@ -1017,25 +1017,27 @@ namespace ByteGuard.FileValidator
 
             stream.Seek(0, SeekOrigin.Begin);
 
+            bool isClean;
             try
             {
-                var isClean = _configuration.AntimalwareScanner.IsClean(stream, fileName);
-                if (!isClean)
-                {
-                    if (_configuration.ThrowExceptionOnInvalidFile)
-                    {
-                        throw new MalwareDetectedException();
-                    }
-
-                    return false;
-                }
-
-                return true;
+                isClean = _configuration.AntimalwareScanner.IsClean(stream, fileName);
             }
             catch (Exception ex)
             {
                 throw new AntimalwareScannerException(ex);
             }
+
+            if (!isClean)
+            {
+                if (_configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw new MalwareDetectedException();
+                }
+
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
