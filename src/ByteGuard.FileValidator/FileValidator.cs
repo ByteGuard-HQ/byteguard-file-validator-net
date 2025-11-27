@@ -325,6 +325,26 @@ namespace ByteGuard.FileValidator
                 return false;
             }
 
+            // Validate antimalware scan if configured.
+            if (_configuration.AntimalwareScanner != null)
+            {
+                using (var memoryStream = new MemoryStream(content))
+                {
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+
+                    var isClean = _configuration.AntimalwareScanner.IsClean(memoryStream, fileName);
+                    if (!isClean)
+                    {
+                        if (_configuration.ThrowExceptionOnInvalidFile)
+                        {
+                            throw new MalwareDetectedException();
+                        }
+
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
 

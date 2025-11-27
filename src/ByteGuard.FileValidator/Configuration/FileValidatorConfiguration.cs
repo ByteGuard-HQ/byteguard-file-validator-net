@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ByteGuard.FileValidator.Exceptions;
+﻿using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -47,13 +46,11 @@ namespace ByteGuard.FileValidator.Configuration
         /// <summary>
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
         /// </summary>
-        /// <remarks>
-        /// Will throw the following exceptions:
-        /// <ul>
-        ///     <li><see cref="UnsupportedFileException"/> if the given file type is not supported according to the <see cref="SupportedFileTypes"/>.</li>
-        ///     <li><see cref="InvalidSignatureException"/> if the file signature does not match the valid signatures for the given file type.</li>
-        /// </ul>
-        /// </remarks>
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
+
+        /// <summary>
+        /// Optional antimalware scanner to use during file validation.
+        /// </summary>
+        public IAntimalwareScanner? AntimalwareScanner { get; set; } = null;
     }
 }
