@@ -29,10 +29,5 @@ namespace ByteGuard.FileValidator.Configuration
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
         /// </summary>
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
-
-        /// <summary>
-        /// Optional antimalware scanner to use during file validation.
-        /// </summary>
-        public IAntimalwareScanner? AntimalwareScanner { get; set; } = null;
     }
 }

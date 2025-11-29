@@ -3,6 +3,7 @@ using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
 using ByteGuard.FileValidator.Models;
 using ByteGuard.FileValidator.Validators;
+using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator
 {
@@ -240,14 +241,35 @@ namespace ByteGuard.FileValidator
         private readonly FileValidatorConfiguration _configuration;
 
         /// <summary>
+        /// Antimalware scanner instance.
+        /// </summary>
+        private readonly IAntimalwareScanner? _antimalwareScanner;
+
+        /// <summary>
         /// Instantiate a new instance of the file validator.
         /// </summary>
-        /// <param name="configuration">Configuration including which files should be supported and whether an exception should be thrown when encountering an invalid file.</param>
+        /// <param name="configuration">Validator configuration.</param>
         public FileValidator(FileValidatorConfiguration configuration)
         {
             ConfigurationValidator.ThrowIfInvalid(configuration);
 
             _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Instantiate a new instance of the file validator.
+        /// </summary>
+        /// <param name="configuration">Validator configuration.</param>
+        /// <param name="antimalwareScanner">Antimalware scanner to use during file validation.</param>
+        public FileValidator(FileValidatorConfiguration configuration, IAntimalwareScanner antimalwareScanner)
+            : this(configuration)
+        {
+            if (antimalwareScanner == null)
+            {
+                throw new ArgumentNullException(nameof(antimalwareScanner), "Antimalware scanner cannot be null.");
+            }
+
+            _antimalwareScanner = antimalwareScanner;
         }
 
         /// <summary>
@@ -326,7 +348,7 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate antimalware scan if configured.
-            if (_configuration.AntimalwareScanner != null)
+            if (_antimalwareScanner != null)
             {
                 var isClean = IsMalwareClean(fileName, content);
                 if (!isClean)
@@ -988,7 +1010,7 @@ namespace ByteGuard.FileValidator
         /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
         public bool IsMalwareClean(string fileName, byte[] content)
         {
-            if (_configuration.AntimalwareScanner is null)
+            if (_antimalwareScanner is null)
             {
                 throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
             }
@@ -1010,7 +1032,7 @@ namespace ByteGuard.FileValidator
         /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
         public bool IsMalwareClean(string fileName, Stream stream)
         {
-            if (_configuration.AntimalwareScanner is null)
+            if (_antimalwareScanner is null)
             {
                 throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
             }
@@ -1020,7 +1042,7 @@ namespace ByteGuard.FileValidator
             bool isClean;
             try
             {
-                isClean = _configuration.AntimalwareScanner.IsClean(stream, fileName);
+                isClean = _antimalwareScanner.IsClean(stream, fileName);
             }
             catch (Exception ex)
             {
@@ -1051,7 +1073,7 @@ namespace ByteGuard.FileValidator
         /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
         public bool IsMalwareClean(string filePath)
         {
-            if (_configuration.AntimalwareScanner is null)
+            if (_antimalwareScanner is null)
             {
                 throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
             }
