@@ -41,15 +41,20 @@ In order to use the antimalware scanning capabilities, ensure you have a ByteGua
 ### Basic validation
 
 ```csharp
+// Without antimalware scanner
 var configuration = new FileValidatorConfiguration
 {
   SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png],
   FileSizeLimit = ByteSize.MegaBytes(25),
-  ThrowExceptionOnInvalidFile = false,
-  AntimalwareScanner = new SpecificAntimalwareScanner(scannerOptions)
+  ThrowExceptionOnInvalidFile = false
 };
 
 var fileValidator = new FileValidator(configuration);
+var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
+
+// With antimalware
+var antimalwareScanner = AntimalwareScannerImplementation();
+var fileValidator = new FileValidator(configuration, antimalwareScanner);
 var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
 ```
 
@@ -60,7 +65,6 @@ var configuration = new FileValidatorConfigurationBuilder()
   .AllowFileTypes(FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png)
   .SetFileSizeLimit(ByteSize.MegaBytes(25))
   .SetThrowExceptionOnInvalidFile(false)
-  .AddAntimalwareScanner(new SpecificAntimalwareScanner(scannerOptions))
   .Build();
 
 var fileValidator = new FileValidator(configuration);
@@ -96,15 +100,16 @@ public async Task<IActionResult> Upload(IFormFile file)
 {
     using var stream = file.OpenReadStream();
 
+    var antimalwareScanner = AntimalwareScannerImplementation();
+
     var configuration = new FileValidatorConfiguration
     {
         SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Docx],
         FileSizeLimit = ByteSize.MegaBytes(10),
-        ThrowExceptionOnInvalidFile = false,
-        AntimalwareScanner = new SpecificAntimalwareScanner(scannerOptions)
+        ThrowExceptionOnInvalidFile = false
     };
 
-    var validator = new FileValidator(configuration);
+    var validator = new FileValidator(configuration, antimalwareScanner);
 
     if (!validator.IsValidFile(file.FileName, stream))
     {
@@ -170,7 +175,6 @@ The `FileValidatorConfiguration` supports:
 | `SupportedFileTypes` | Yes | N/A | A list of allowed file extensions (e.g., `.pdf`, `.jpg`).<br>Use the predefined constants in `FileExtensions` for supported types. |
 | `FileSizeLimit` | Yes | N/A | Maximum permitted size of files.<br>Use the static  `ByteSize` class provided with this package, to simplify your limit. |
 | `ThrowExceptionOnInvalidFile` | No | `true` | Whether to throw an exception on invalid files or return `false`. |
-| `AntimalwareScanner` | No | N/A | An antimalware scanner used to scan the given file for potential malware. |
 
 ### Exceptions
 

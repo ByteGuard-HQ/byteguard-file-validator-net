@@ -1073,10 +1073,9 @@ public class FileValidatorTests
         {
             SupportedFileTypes = [".pdf"],
             FileSizeLimit = ByteSize.MegaBytes(25),
-            ThrowExceptionOnInvalidFile = true,
-            AntimalwareScanner = mockAntimalwareScanner
+            ThrowExceptionOnInvalidFile = true
         };
-        var fileValidator = new FileValidator(config);
+        var fileValidator = new FileValidator(config, mockAntimalwareScanner);
         var fileBytes = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }; // Valid PDF signature
 
         // Act
@@ -1097,10 +1096,9 @@ public class FileValidatorTests
         {
             SupportedFileTypes = [".pdf"],
             FileSizeLimit = ByteSize.MegaBytes(25),
-            ThrowExceptionOnInvalidFile = false,
-            AntimalwareScanner = mockAntimalwareScanner
+            ThrowExceptionOnInvalidFile = false
         };
-        var fileValidator = new FileValidator(config);
+        var fileValidator = new FileValidator(config, mockAntimalwareScanner);
         var fileBytes = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }; // Valid PDF signature
 
         // Act
