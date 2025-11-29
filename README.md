@@ -9,8 +9,8 @@ It helps you enforce consistent file upload rules by checking:
 -   Specification conformance for Office Open XML / Open Document Formats (`.docx`,  `.xlsx`,  `.pptx`,  `.odt`)
 -   Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
 
-> ⚠️ **Important:** This library should be part of a **defense-in-depth** strategy.  
-It does not replace antivirus scanning, sandboxing, or other security controls.
+> ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
+It does **not** replace endpoint protection, sandboxing, input validation, or other security controls.
 
 ## Features
 
