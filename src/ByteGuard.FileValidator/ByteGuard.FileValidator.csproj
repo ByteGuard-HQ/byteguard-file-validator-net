@@ -9,6 +9,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>byteguard file-validator file-validation file-upload upload-validation security application-security appsec</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>icon.png</PackageIcon>
         <Copyright>Copyright © ByteGuard Contributors</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
@@ -19,7 +20,7 @@
     
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-        <None Include="..\..\assets\icon.jpg" Pack="true" PackagePath="\" />
+        <None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" />
     </ItemGroup>
     
     <ItemGroup>
