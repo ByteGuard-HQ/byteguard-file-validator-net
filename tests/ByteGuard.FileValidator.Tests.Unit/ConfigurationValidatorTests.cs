@@ -9,7 +9,7 @@ public class ConfigurationValidatorTests
     public void ThrowIfInvalid_ConfigurationIsNull_ShouldThrowArgumentNullException()
     {
         // Act
-        Action act = () => new FileValidator(null);
+        Action act = () => new FileValidator(null!);
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(act);
@@ -21,7 +21,7 @@ public class ConfigurationValidatorTests
         // Arrange
         var config = new FileValidatorConfiguration
         {
-            SupportedFileTypes = null
+            SupportedFileTypes = null!
         };
 
         // Act

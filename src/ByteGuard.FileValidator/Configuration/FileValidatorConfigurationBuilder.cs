@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator.Configuration
 {

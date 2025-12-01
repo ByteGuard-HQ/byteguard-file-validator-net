@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ByteGuard.FileValidator.Exceptions;
+﻿using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -27,33 +26,8 @@ namespace ByteGuard.FileValidator.Configuration
         public long FileSizeLimit { get; set; } = -1;
 
         /// <summary>
-        /// Maximum file size limit in string representation (e.g. "25MB", "2 GB", etc.).
-        /// </summary>
-        /// <remarks>
-        /// Defines the file size limit of files. See <see cref="ByteSize"/> for conversion help.
-        /// Will be ignored if <see cref="FileSizeLimit"/> is defined.
-        /// Spacing (<c>"25 MB"</c> vs. <c>"25MB"</c>) is irrelevant.
-        /// <para>Supported string representation are:
-        /// <ul>
-        /// <li><c>B</c>: Bytes</li>
-        /// <li><c>KB</c>: Kilobytes</li>
-        /// <li><c>MB</c>: Megabytes</li>
-        /// <li><c>GB</c>: Gigabytes</li>
-        /// </ul>
-        /// </para>
-        /// </remarks>
-        public string FriendlyFileSizeLimit { get; set; }
-
-        /// <summary>
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
         /// </summary>
-        /// <remarks>
-        /// Will throw the following exceptions:
-        /// <ul>
-        ///     <li><see cref="UnsupportedFileException"/> if the given file type is not supported according to the <see cref="SupportedFileTypes"/>.</li>
-        ///     <li><see cref="InvalidSignatureException"/> if the file signature does not match the valid signatures for the given file type.</li>
-        /// </ul>
-        /// </remarks>
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
     }
 }

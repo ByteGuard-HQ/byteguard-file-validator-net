@@ -1,9 +1,6 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
-using System;
-using System.IO;
-using System.Linq;
 using ByteGuard.FileValidator.Exceptions;
 
 namespace ByteGuard.FileValidator.Validators

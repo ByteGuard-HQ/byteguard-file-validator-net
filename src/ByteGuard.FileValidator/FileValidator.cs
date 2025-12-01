@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
 using ByteGuard.FileValidator.Models;
 using ByteGuard.FileValidator.Validators;
+using ByteGuard.FileValidator.Scanners;
 
 namespace ByteGuard.FileValidator
 {
@@ -241,17 +238,38 @@ namespace ByteGuard.FileValidator
         /// <summary>
         /// File validator configuration instance.
         /// </summary>
-        private readonly FileValidatorConfiguration configuration;
+        private readonly FileValidatorConfiguration _configuration;
 
         /// <summary>
-        /// Instantiate a new instance of the file validator with the given configuration.
+        /// Antimalware scanner instance.
         /// </summary>
-        /// <param name="configuration">Configuration including which files should be supported and whether an exception should be thrown when encountering an invalid file.</param>
+        private readonly IAntimalwareScanner? _antimalwareScanner;
+
+        /// <summary>
+        /// Instantiate a new instance of the file validator.
+        /// </summary>
+        /// <param name="configuration">Validator configuration.</param>
         public FileValidator(FileValidatorConfiguration configuration)
         {
             ConfigurationValidator.ThrowIfInvalid(configuration);
 
-            this.configuration = configuration;
+            _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Instantiate a new instance of the file validator.
+        /// </summary>
+        /// <param name="configuration">Validator configuration.</param>
+        /// <param name="antimalwareScanner">Antimalware scanner to use during file validation.</param>
+        public FileValidator(FileValidatorConfiguration configuration, IAntimalwareScanner antimalwareScanner)
+            : this(configuration)
+        {
+            if (antimalwareScanner == null)
+            {
+                throw new ArgumentNullException(nameof(antimalwareScanner), "Antimalware scanner cannot be null.");
+            }
+
+            _antimalwareScanner = antimalwareScanner;
         }
 
         /// <summary>
@@ -260,7 +278,7 @@ namespace ByteGuard.FileValidator
         /// <returns>All supported file types as per the configuration.</returns>
         public List<string> GetSupportedFileTypes()
         {
-            return configuration.SupportedFileTypes;
+            return _configuration.SupportedFileTypes;
         }
 
         /// <summary>
@@ -277,7 +295,7 @@ namespace ByteGuard.FileValidator
             // Validate file type.
             if (!IsValidFileType(fileName))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -288,7 +306,7 @@ namespace ByteGuard.FileValidator
             // Validate file size.
             if (!HasValidSize(content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -299,7 +317,7 @@ namespace ByteGuard.FileValidator
             // Validate file signature.
             if (!HasValidSignature(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException();
                 }
@@ -310,7 +328,7 @@ namespace ByteGuard.FileValidator
             // Validate Open XML conformance for specific file types.
             if (IsOpenXmlFormat(fileName) && !IsValidOpenXmlDocument(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException();
                 }
@@ -321,12 +339,27 @@ namespace ByteGuard.FileValidator
             // Validate Open Document Format (ODF) for specific file types.
             if (IsOpenDocumentFormat(fileName) && !IsValidOpenDocumentFormat(fileName, content))
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException();
                 }
 
                 return false;
+            }
+
+            // Validate antimalware scan if configured.
+            if (_antimalwareScanner != null)
+            {
+                var isClean = IsMalwareClean(fileName, content);
+                if (!isClean)
+                {
+                    if (_configuration.ThrowExceptionOnInvalidFile)
+                    {
+                        throw new MalwareDetectedException();
+                    }
+
+                    return false;
+                }
             }
 
             return true;
@@ -398,10 +431,10 @@ namespace ByteGuard.FileValidator
         public bool IsValidFileType(string fileName)
         {
             var extension = Path.GetExtension(fileName).ToLowerInvariant();
-            var isSupported = configuration.SupportedFileTypes.Contains(extension, StringComparer.InvariantCultureIgnoreCase) &&
+            var isSupported = _configuration.SupportedFileTypes.Contains(extension, StringComparer.InvariantCultureIgnoreCase) &&
                 SupportedFileDefinitions.Any(fd => fd.FileType.Equals(extension, StringComparison.InvariantCultureIgnoreCase));
 
-            if (!isSupported && configuration.ThrowExceptionOnInvalidFile)
+            if (!isSupported && _configuration.ThrowExceptionOnInvalidFile)
             {
                 throw new UnsupportedFileException();
             }
@@ -449,7 +482,7 @@ namespace ByteGuard.FileValidator
                 fd.FileType.Equals(extension, StringComparison.InvariantCultureIgnoreCase));
             if (fileDefinition == null)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new UnsupportedFileException();
                 }
@@ -465,7 +498,7 @@ namespace ByteGuard.FileValidator
                 using (var pdfValidator = new PdfValidator(content))
                 {
                     var isValidPdf = pdfValidator.IsValidPdfSignature();
-                    if (!isValidPdf && configuration.ThrowExceptionOnInvalidFile)
+                    if (!isValidPdf && _configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidSignatureException();
                     }
@@ -481,7 +514,7 @@ namespace ByteGuard.FileValidator
             // Check whether the content is valid according to the primary header signature length.
             if (content.Length < signatureEnd)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException("File content is too short to contain a valid signature.");
                 }
@@ -497,7 +530,7 @@ namespace ByteGuard.FileValidator
             // Might as well return early as the subtype check is irrelevant if the primary signature is invalid.
             if (!result)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidSignatureException();
                 }
@@ -515,7 +548,7 @@ namespace ByteGuard.FileValidator
                 // Check whether the content is valid according to the primary header signature length.
                 if (content.Length < subtypeSignatureEnd)
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidSignatureException("File content is too short to contain a valid subtype signature.");
                     }
@@ -529,7 +562,7 @@ namespace ByteGuard.FileValidator
                 result = fileDefinition.ValidSubtypeSignatures.Any(signature => subtypeHeaderBytes.Take(signature.Length).SequenceEqual(signature));
             }
 
-            if (!result && configuration.ThrowExceptionOnInvalidFile)
+            if (!result && _configuration.ThrowExceptionOnInvalidFile)
             {
                 throw new InvalidSignatureException();
             }
@@ -605,9 +638,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
         public bool HasValidSize(byte[] content)
         {
-            var isBelowLimit = content.Length <= configuration.FileSizeLimit;
+            var isBelowLimit = content.Length <= _configuration.FileSizeLimit;
 
-            if (configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
+            if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
                 throw new InvalidFileSizeException();
             }
@@ -628,9 +661,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
         public bool HasValidSize(Stream stream)
         {
-            var isBelowLimit = stream.Length <= configuration.FileSizeLimit;
+            var isBelowLimit = stream.Length <= _configuration.FileSizeLimit;
 
-            if (configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
+            if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
                 throw new InvalidFileSizeException();
             }
@@ -701,7 +734,7 @@ namespace ByteGuard.FileValidator
                 // If we are not expecting this file type to be an Open XML file, we can just return false.
                 if (!IsOpenXmlFormat(fileName))
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidOpenXmlFormatException("The provided file extension is not recognized as an Open XML document.");
                     }
@@ -735,7 +768,7 @@ namespace ByteGuard.FileValidator
                     }
                 }
 
-                if (configuration.ThrowExceptionOnInvalidFile && !isValid)
+                if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
                 {
                     throw new InvalidOpenXmlFormatException();
                 }
@@ -744,7 +777,7 @@ namespace ByteGuard.FileValidator
             }
             catch (InvalidDataException e)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("The provided file is not a valid Open XML file. See inner exception for details.", e);
                 }
@@ -754,7 +787,7 @@ namespace ByteGuard.FileValidator
             catch (FileFormatException e)
             {
                 // Thrown if the content is corrupt.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("File content appears to be corrupt. Se inner exception for details.", e);
                 }
@@ -764,7 +797,7 @@ namespace ByteGuard.FileValidator
             catch (OpenXmlPackageException e)
             {
                 // Thrown if the content is not valid Open XML.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenXmlFormatException("Content does not appear to be valid Open XML format. See inner exception for details.", e);
                 }
@@ -774,7 +807,7 @@ namespace ByteGuard.FileValidator
             catch (InvalidOpenXmlFormatException)
             {
                 // Exceptions throw from within the Open XML format validator.
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw;
                 }
@@ -872,7 +905,7 @@ namespace ByteGuard.FileValidator
                 // If we are not expecting this file type to be an Open XML file, we can just return false.
                 if (!IsOpenDocumentFormat(fileName))
                 {
-                    if (configuration.ThrowExceptionOnInvalidFile)
+                    if (_configuration.ThrowExceptionOnInvalidFile)
                     {
                         throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format document.");
                     }
@@ -896,7 +929,7 @@ namespace ByteGuard.FileValidator
                     }
                 }
 
-                if (configuration.ThrowExceptionOnInvalidFile && !isValid)
+                if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
                 {
                     throw new InvalidOpenDocumentFormatException();
                 }
@@ -905,7 +938,7 @@ namespace ByteGuard.FileValidator
             }
             catch (InvalidDataException e)
             {
-                if (configuration.ThrowExceptionOnInvalidFile)
+                if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException("The provided file is not a valid Open Document Format file. See inner exception for details.", e);
                 }
@@ -953,6 +986,98 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenDocumentFormat(string filePath)
         {
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentNullException(nameof(filePath), "File path cannot be null or empty.");
+            }
+
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                var fileName = Path.GetFileName(filePath);
+
+                return IsValidOpenDocumentFormat(fileName, fileStream);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="content">Byte content of the file.</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string fileName, byte[] content)
+        {
+            if (_antimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
+            using (var memoryStream = new MemoryStream(content))
+            {
+                return IsMalwareClean(fileName, memoryStream);
+            }
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="stream">Stream content of the file.</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string fileName, Stream stream)
+        {
+            if (_antimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            bool isClean;
+            try
+            {
+                isClean = _antimalwareScanner.IsClean(stream, fileName);
+            }
+            catch (Exception ex)
+            {
+                throw new AntimalwareScannerException(ex);
+            }
+
+            if (!isClean)
+            {
+                if (_configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw new MalwareDetectedException();
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Whether the given file is clean according to the configured antimalware scanner.
+        /// </summary>
+        /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.odt</c>).</param>
+        /// <returns><c>true</c> if the no malware was detected in the file from the configured antimalware scanner, <c>false</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        public bool IsMalwareClean(string filePath)
+        {
+            if (_antimalwareScanner is null)
+            {
+                throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentNullException(nameof(filePath), "File path cannot be null or empty.");

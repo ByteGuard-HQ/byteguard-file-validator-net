@@ -7,9 +7,10 @@ It helps you enforce consistent file upload rules by checking:
 -   File size limits
 -   File signatures (magic numbers) to detect spoofed types
 -   Specification conformance for Office Open XML / Open Document Formats (`.docx`,  `.xlsx`,  `.pptx`,  `.odt`)
+-   Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
 
-> ⚠️ **Important:** This library should be part of a **defense-in-depth** strategy.  
-It does not replace antivirus scanning, sandboxing, or other security controls.
+> ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
+It does **not** replace endpoint protection, sandboxing, input validation, or other security controls.
 
 ## Features
 
@@ -17,6 +18,7 @@ It does not replace antivirus scanning, sandboxing, or other security controls.
 - ✅ Validate files by **size**
 - ✅ Validate files by **signature (_magic-numbers_)**
 - ✅ Validate files by **specification conformance** for archive-based formats (_Open XML and Open Document Formats_)
+- ✅ **Ensure no malware** through a variety of antimalware scanners
 - ✅ Validate using file path, `Stream`, or `byte[]`
 - ✅ Configure which file types to support
 - ✅ Configure whether to **throw exceptions** or simply return a boolean
@@ -25,26 +27,34 @@ It does not replace antivirus scanning, sandboxing, or other security controls.
 ## Getting Started
 
 ### Installation
-This package is published and installed via NuGet.
+This package is published and installed via [NuGet](https://www.nuget.org/packages/ByteGuard.FileValidator).
 
 Reference the package in your project:
 ```bash
 dotnet add package ByteGuard.FileValidator
 ```
 
+### Antimalware scanners
+In order to use the antimalware scanning capabilities, ensure you have a ByteGuard.FileValidator antimalware package referenced as well. Youo can find the relevant scanner package on NuGet under the namespace `ByteGuard.FileValidator.Scanners`.
 ## Usage
 
 ### Basic validation
 
 ```csharp
+// Without antimalware scanner
 var configuration = new FileValidatorConfiguration
 {
-	SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png],
-	FileSizeLimit = ByteSize.MegaBytes(25),
-	ThrowExceptionOnInvalidFile = false
+  SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png],
+  FileSizeLimit = ByteSize.MegaBytes(25),
+  ThrowExceptionOnInvalidFile = false
 };
 
 var fileValidator = new FileValidator(configuration);
+var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
+
+// With antimalware
+var antimalwareScanner = AntimalwareScannerImplementation();
+var fileValidator = new FileValidator(configuration, antimalwareScanner);
 var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
 ```
 
@@ -52,10 +62,10 @@ var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
 
 ```csharp
 var configuration = new FileValidatorConfigurationBuilder()
-	.AllowFileTypes(FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png)
-	.SetFileSizeLimit(ByteSize.MegaBytes(25))
-	.SetThrowExceptionOnInvalidFile(false)
-	.Build();
+  .AllowFileTypes(FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png)
+  .SetFileSizeLimit(ByteSize.MegaBytes(25))
+  .SetThrowExceptionOnInvalidFile(false)
+  .Build();
 
 var fileValidator = new FileValidator(configuration);
 var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
@@ -72,6 +82,7 @@ The `FileValidator` class provides methods to validate specific aspects of a fil
 > 2.  File size validation
 > 3.  Signature (magic-number) validation
 > 4.  Optional Open XML / Open Document Format specification conformance validation (for supported types)
+> 5. Optional antimalware scanning with a compatible scanning package
 
 ```csharp
 bool isExtensionValid = fileValidator.IsValidFileType(fileName);
@@ -79,6 +90,7 @@ bool isFileSizeValid = fileValidator.HasValidSize(fileStream);
 bool isSignatureValid = fileValidator.HasValidSignature(fileName, fileStream);
 bool isOpenXmlValid = fileValidator.IsValidOpenXmlDocument(fileName, fileStream);
 bool isOpenDocumentFormatValid = fileValidator.IsValidOpenDocumentFormat(fileName, fileStream);
+bool isMalwareClean = fileValidator.IsMalwareClean(fileName, fileStream);
 ```
 
 ### Example
@@ -88,6 +100,8 @@ public async Task<IActionResult> Upload(IFormFile file)
 {
     using var stream = file.OpenReadStream();
 
+    var antimalwareScanner = AntimalwareScannerImplementation();
+
     var configuration = new FileValidatorConfiguration
     {
         SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Docx],
@@ -95,7 +109,7 @@ public async Task<IActionResult> Upload(IFormFile file)
         ThrowExceptionOnInvalidFile = false
     };
 
-    var validator = new FileValidator(configuration);
+    var validator = new FileValidator(configuration, antimalwareScanner);
 
     if (!validator.IsValidFile(file.FileName, stream))
     {
@@ -132,9 +146,10 @@ The following file extensions are supported by the `FileValidator`:
 
 `IsValidFile` always validates:
 
-- File extension (against `SupportedFileTypes`)
-- File size (against `FileSizeLimit`)
-- File signature (magic number)
+- File extension (_against `SupportedFileTypes`_)
+- File size (_against `FileSizeLimit`_)
+- File signature (_magic number_)
+- Malware scan result (_if an antimalware scanner has been configured_)
 
 For some formats, additional checks are performed:
 
@@ -143,11 +158,13 @@ For some formats, additional checks are performed:
   - File size
   - Signature
   - Specification conformance
+  - Malware scan result
 
 - **Other binary formats** (e.g. images, audio, video such as `.jpg`, `.png`, `.mp3`, `.mp4`):  
   - Extension
   - File size
   - Signature
+  - Malware scan result
 
 ## Configuration Options
 
@@ -171,6 +188,7 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 | `InvalidSignatureException` | Thrown when the file's signature does not match the expected signature for its type. |
 | `InvalidOpenXmlFormatException` | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
 | `InvalidOpenDocumentFormatException` | Thrown when the specification conformance of an Open Document Format file is invalid (`.odt`, etc.). |
+| `MalwareDetectedException` | Thrown when the configured antimalware scanner detected malware in the file from a scan result. |
 
 ## When to use this package
 

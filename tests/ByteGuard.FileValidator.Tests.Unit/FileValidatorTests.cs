@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
+using ByteGuard.FileValidator.Scanners;
+using NSubstitute;
 
 namespace ByteGuard.FileValidator.Tests.Unit;
 
@@ -10,7 +12,7 @@ public class FileValidatorTests
     public void Constructor_ShouldThrowArgumentNullException_WhenConfigurationIsNotProvided()
     {
         // Act
-        Action act = () => new FileValidator(null);
+        Action act = () => new FileValidator(null!);
 
         // Assert
         Assert.Throws<ArgumentNullException>(act);
@@ -1058,5 +1060,51 @@ public class FileValidatorTests
 
         // Assert
         Assert.Throws<InvalidFileSizeException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, byte[]) should throw MalwareDetectedException when an antimalware scanner is registered and malware is detected and ThrowExceptionOnInvalidFile is true")]
+    public void IsValidFile_AntimalwareScannerDetectsMalwareAndThrowExceptionOnInvalidFileIsTrue_ShouldThrowMalwareDetectedException()
+    {
+        // Arrange
+        var mockAntimalwareScanner = Substitute.For<IAntimalwareScanner>();
+        mockAntimalwareScanner.IsClean(Arg.Any<Stream>(), Arg.Any<string>()).Returns(false); // Simulate malware detection
+
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [".pdf"],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config, mockAntimalwareScanner);
+        var fileBytes = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }; // Valid PDF signature
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("test.pdf", fileBytes);
+
+        // Assert
+        Assert.Throws<MalwareDetectedException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, byte[]) should return false when an antimalware scanner is registered and malware is detected and ThrowExceptionOnInvalidFile is false")]
+    public void IsValidFile_AntimalwareScannerDetectsMalwareAndThrowExceptionOnInvalidFileIsFalse_ShouldReturnFalse()
+    {
+        // Arrange
+        var mockAntimalwareScanner = Substitute.For<IAntimalwareScanner>();
+        mockAntimalwareScanner.IsClean(Arg.Any<Stream>(), Arg.Any<string>()).Returns(false); // Simulate malware detection
+
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [".pdf"],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = false
+        };
+        var fileValidator = new FileValidator(config, mockAntimalwareScanner);
+        var fileBytes = new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2D }; // Valid PDF signature
+
+        // Act
+        var actual = fileValidator.IsValidFile("test.pdf", fileBytes);
+
+        // Assert
+        Assert.False(actual);
     }
 }
