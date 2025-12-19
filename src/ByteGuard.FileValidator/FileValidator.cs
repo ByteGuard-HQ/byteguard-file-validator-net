@@ -995,7 +995,7 @@ namespace ByteGuard.FileValidator
 
             using (var memoryStream = new MemoryStream(content))
             {
-                return IsValidOpenDocumentFormat(fileName, content);
+                return IsValidOpenDocumentFormat(fileName, memoryStream);
             }
         }
 
