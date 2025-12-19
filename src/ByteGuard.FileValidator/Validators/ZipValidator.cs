@@ -59,16 +59,16 @@ internal static class ZipValidator
                 }
 
                 // Validate uncompressed size.
-                if (uncompressed > options.MaxEntryUncompressedSize)
+                if (uncompressed > options.EntryUncompressedSizeLimit)
                 {
-                    throw new InvalidZipArchiveException($"'{entry.FullName}' too large uncompressed ({compressed} > {options.MaxEntryUncompressedSize}).");
+                    throw new InvalidZipArchiveException($"'{entry.FullName}' too large uncompressed ({compressed} > {options.EntryUncompressedSizeLimit}).");
                 }
 
                 // Validate total uncompressed size.
                 totalUncompressed += uncompressed;
-                if (totalUncompressed > options.MaxTotalUncompressedSize)
+                if (totalUncompressed > options.TotalUncompressedSizeLimit)
                 {
-                    throw new InvalidZipArchiveException($"ZIP total uncompressed too large ({totalUncompressed} > {options.MaxTotalUncompressedSize})");
+                    throw new InvalidZipArchiveException($"ZIP total uncompressed too large ({totalUncompressed} > {options.TotalUncompressedSizeLimit})");
                 }
 
                 // Validate compression rate.
@@ -80,9 +80,9 @@ internal static class ZipValidator
                     }
 
                     var ratio = (double)uncompressed / compressed;
-                    if (ratio > options.MaxCompressionRate)
+                    if (ratio > options.CompressionRateLimit)
                     {
-                        throw new InvalidZipArchiveException($"Entry {entry.FullName} compression rate to high ({ratio:0.0}:1 > {options.MaxCompressionRate:0.0}:1).");
+                        throw new InvalidZipArchiveException($"Entry {entry.FullName} compression rate to high ({ratio:0.0}:1 > {options.CompressionRateLimit:0.0}:1).");
                     }
                 }
             }

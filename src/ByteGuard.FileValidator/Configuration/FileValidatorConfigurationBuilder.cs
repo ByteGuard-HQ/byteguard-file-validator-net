@@ -10,6 +10,7 @@ namespace ByteGuard.FileValidator.Configuration
         private readonly List<string> supportedFileTypes = new List<string>();
         private bool throwOnInvalidFiles = true;
         private long fileSizeLimit = ByteSize.MegaBytes(25);
+        private ZipPreflightConfiguration zipPreflight = new();
 
         /// <summary>
         /// Allow specific file types (extensions) to be validated.
@@ -44,6 +45,22 @@ namespace ByteGuard.FileValidator.Configuration
         }
 
         /// <summary>
+        /// Configure the ZIP preflight validation options.
+        /// </summary>
+        /// <param name="configure">Configuration action.</param>
+        public FileValidatorConfigurationBuilder ConfigureZipPreflight(Action<ZipPreflightConfiguration> configure)
+        {
+            configure?.Invoke(zipPreflight);
+            return this;
+        }
+
+        /// <summary>
+        /// Disable ZIP preflight validation.
+        /// </summary>
+        public FileValidatorConfigurationBuilder DisableZipPreflight()
+            => ConfigureZipPreflight(options => options.Enabled = false);
+
+        /// <summary>
         /// Build configuration.
         /// </summary>
         /// <returns>File validator configurations object.</returns>
@@ -53,7 +70,16 @@ namespace ByteGuard.FileValidator.Configuration
             {
                 SupportedFileTypes = supportedFileTypes,
                 ThrowExceptionOnInvalidFile = throwOnInvalidFiles,
-                FileSizeLimit = fileSizeLimit
+                FileSizeLimit = fileSizeLimit,
+                ZipPreflightConfiguration = new()
+                {
+                    Enabled = zipPreflight.Enabled,
+                    MaxEntries = zipPreflight.MaxEntries,
+                    TotalUncompressedSizeLimit = zipPreflight.TotalUncompressedSizeLimit,
+                    EntryUncompressedSizeLimit = zipPreflight.EntryUncompressedSizeLimit,
+                    CompressionRateLimit = zipPreflight.CompressionRateLimit,
+                    RejectSuspiciousPaths = zipPreflight.RejectSuspiciousPaths
+                }
             };
 
             ConfigurationValidator.ThrowIfInvalid(configuration);

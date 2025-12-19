@@ -3,7 +3,7 @@
 namespace ByteGuard.FileValidator.Configuration
 {
     /// <summary>
-    /// Class used to validate the given configuration.
+    /// Class used to validate a given file validator configuration instance.
     /// </summary>
     public static class ConfigurationValidator
     {
@@ -11,8 +11,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// Validate configuration and throw exceptions if invalid.
         /// </summary>
         /// <param name="configuration">Configuration instance to validate.</param>
-        /// <exception cref="ArgumentNullException">Throw if the configuration instance is null.</exception>
-        /// <exception cref="ArgumentException">Thrown is no supported file types have been set, there's an error with any of the provided file types (missing "." prefix), or the file size limit is less than or equal to 0.</exception>
+        /// <exception cref="ArgumentNullException">Throw if any required objects on the configuration object is <c>null</c>, or if the configuration object itself is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if any of the configuration values are invalid.</exception>
         /// <exception cref="UnsupportedFileException">Thrown if any of the provided supported file types are unsupported by the file validator.</exception>
         public static void ThrowIfInvalid(FileValidatorConfiguration configuration)
         {
@@ -44,6 +44,65 @@ namespace ByteGuard.FileValidator.Configuration
             if (configuration.FileSizeLimit <= 0)
             {
                 throw new ArgumentException("File size limit must be greater than zero.", nameof(configuration.FileSizeLimit));
+            }
+
+            ValidateZipPreflightConfiguration(configuration);
+        }
+
+        /// <summary>
+        /// Validate the ZIP preflight options on the configuration object.
+        /// </summary>
+        /// <param name="configuration">File validator configuration object.</param>
+        private static void ValidateZipPreflightConfiguration(FileValidatorConfiguration configuration)
+        {
+            var zipConfig = configuration.ZipPreflightConfiguration
+                ?? throw new ArgumentNullException(
+                    nameof(configuration.ZipPreflightConfiguration),
+                    $"ZipPreflightConfiguration cannot be null. Disable the preflight using 'Enabled' if ZIP validation is unwanted.");
+
+            if (zipConfig.Enabled)
+            {
+                if (zipConfig.MaxEntries == 0 || zipConfig.MaxEntries < -1)
+                {
+                    throw new ArgumentException("MaxEntries on ZIP preflight configuration is invalid. Either set a valid positive value or use '-1' for no limit.", nameof(zipConfig.MaxEntries));
+                }
+
+                if (zipConfig.TotalUncompressedSizeLimit == 0 || zipConfig.TotalUncompressedSizeLimit < -1)
+                {
+                    throw new ArgumentException(
+                        "TotalUncompressedSizeLimit on ZIP preflight configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        nameof(zipConfig.TotalUncompressedSizeLimit));
+                }
+
+                if (zipConfig.EntryUncompressedSizeLimit == 0 || zipConfig.EntryUncompressedSizeLimit < -1)
+                {
+                    throw new ArgumentException(
+                        "EntryUncompressedSizeLimit on ZIP preflight configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        nameof(zipConfig.EntryUncompressedSizeLimit));
+                }
+
+                // Ensure EntryUncompressedSizeLimit isn't greater than the TotalUncompressedSizeLimit if defined.
+                if (zipConfig.EntryUncompressedSizeLimit != -1 && zipConfig.TotalUncompressedSizeLimit != -1
+                    && zipConfig.EntryUncompressedSizeLimit > zipConfig.TotalUncompressedSizeLimit)
+                {
+                    throw new ArgumentException(
+                        "EntryUncompressedSizeLimit cannot exceed TotalUncompressedSizeLimit.",
+                        nameof(zipConfig.EntryUncompressedSizeLimit));
+                }
+
+                if (double.IsNaN(zipConfig.CompressionRateLimit) || double.IsInfinity(zipConfig.CompressionRateLimit))
+                {
+                    throw new ArgumentException(
+                        "CompressionRateLimit must be a finite number. Either set a valid positive value or use '-1' for no limit.",
+                        nameof(zipConfig.CompressionRateLimit));
+                }
+
+                if (zipConfig.CompressionRateLimit == 0 || zipConfig.CompressionRateLimit < -1)
+                {
+                    throw new ArgumentException(
+                        "CompressionRateLimit on ZIP preflight configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        nameof(zipConfig.CompressionRateLimit));
+                }
             }
         }
     }
