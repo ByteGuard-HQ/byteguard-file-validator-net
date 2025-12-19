@@ -768,6 +768,11 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
+                // Perform ZIP preflight validation.
+                ZipValidator.Validate(stream, _configuration.ZipPreflightConfiguration);
+
+                stream.Seek(0, SeekOrigin.Begin);
+
                 bool isValid;
                 switch (extension.ToLowerInvariant())
                 {
@@ -829,6 +834,15 @@ namespace ByteGuard.FileValidator
             catch (InvalidOpenXmlFormatException)
             {
                 // Exceptions throw from within the Open XML format validator.
+                if (_configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw;
+                }
+
+                return false;
+            }
+            catch (InvalidZipArchiveException)
+            {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw;
@@ -941,8 +955,12 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
-                bool isValid;
+                // Perform ZIP preflight validation.
+                ZipValidator.Validate(stream, _configuration.ZipPreflightConfiguration);
 
+                stream.Seek(0, SeekOrigin.Begin);
+
+                bool isValid;
                 switch (extension.ToLowerInvariant())
                 {
                     case FileExtensions.Odt:
@@ -966,6 +984,15 @@ namespace ByteGuard.FileValidator
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException("The provided file is not a valid Open Document Format file. See inner exception for details.", e);
+                }
+
+                return false;
+            }
+            catch (InvalidZipArchiveException)
+            {
+                if (_configuration.ThrowExceptionOnInvalidFile)
+                {
+                    throw;
                 }
 
                 return false;

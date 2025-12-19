@@ -29,5 +29,73 @@ namespace ByteGuard.FileValidator.Configuration
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
         /// </summary>
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
+
+        /// <summary>
+        /// ZIP preflight configuration.
+        /// </summary>
+        /// <remarks>
+        /// These settings apply to internal ZIP preflight validation for ZIP-archive based formats such as .docx, .xlsx, .pptx, and .odt.
+        /// </remarks>
+        public ZipPreflightConfiguration ZipPreflightConfiguration { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Configuration class for the internal ZIP preflight validator.
+    /// </summary>
+    /// <remarks>
+    /// These settings apply to internal ZIP preflight validation for ZIP-archive based formats such as .docx, .xlsx, .pptx, and .odt.
+    /// </remarks>
+    public class ZipPreflightConfiguration
+    {
+        /// <summary>
+        /// Whether the ZIP preflight validation is enabled.
+        /// </summary>
+        public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Max entries within a given ZIP-archive.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 10.000.
+        /// </remarks>
+        public int MaxEntries { get; set; } = 10_000;
+
+        /// <summary>
+        /// Max allowed total uncompressed size.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 512MB.
+        /// </remarks>
+        public long MaxTotalUncompressedSize { get; set; } = ByteSize.MegaBytes(512);
+
+        /// <summary>
+        /// Max allowed uncompressed size for each entry within the ZIP-archive.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 128MB.
+        /// </remarks>
+        public long MaxEntryUncompressedSize { get; set; } = ByteSize.MegaBytes(128);
+
+        /// <summary>
+        /// Max allowed compression rate.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 200:1.
+        /// </remarks>
+        public double MaxCompressionRate { get; set; } = 200.0; // 200:1
+
+        /// <summary>
+        /// Whether to reject suspicious paths within the ZIP-archive.
+        /// </summary>
+        /// <remarks>
+        /// Will handle the following paths as being suspicious:
+        /// <ul>
+        ///   <li><c>/</c></li>
+        ///   <li><c>\\</c></li>
+        ///   <li>Drive-letters (e.g. <c>C:</c> and <c>D:</c>)</li>
+        ///   <li>Path traversal (e.g. <c>../</c>, <c>\\..</c>, <c>..</c>)</li>
+        /// </ul>
+        /// </remarks>
+        public bool RejectSuspiciousPaths { get; set; } = true;
     }
 }
