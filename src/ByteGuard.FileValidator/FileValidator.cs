@@ -282,15 +282,15 @@ namespace ByteGuard.FileValidator
         }
 
         /// <summary>
-        /// Whether the given file is valid based on its type, signature, size, and potentially its internal structure (for Open XML documents).
+        /// Whether the given file is valid based on all parameters.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
-        /// <param name="content">Byte array content of the file.</param>
-        /// <returns><c>true</c> if supported file type, valid signature, and valid Open XML (if the file type is expected to be an Open XML file), <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
+        /// <param name="stream">Stream content of the file.</param>
+        /// <returns><c>true</c> if valid based on all parameters, <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidFile(string fileName, byte[] content)
+        public bool IsValidFile(string fileName, Stream stream)
         {
             // Validate file type.
             if (!IsValidFileType(fileName))
@@ -304,7 +304,7 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate file size.
-            if (!HasValidSize(content))
+            if (!HasValidSize(stream))
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
@@ -315,7 +315,7 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate file signature.
-            if (!HasValidSignature(fileName, content))
+            if (!HasValidSignature(fileName, stream))
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
@@ -326,7 +326,7 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate Open XML conformance for specific file types.
-            if (IsOpenXmlFormat(fileName) && !IsValidOpenXmlDocument(fileName, content))
+            if (IsOpenXmlFormat(fileName) && !IsValidOpenXmlDocument(fileName, stream))
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
@@ -337,7 +337,7 @@ namespace ByteGuard.FileValidator
             }
 
             // Validate Open Document Format (ODF) for specific file types.
-            if (IsOpenDocumentFormat(fileName) && !IsValidOpenDocumentFormat(fileName, content))
+            if (IsOpenDocumentFormat(fileName) && !IsValidOpenDocumentFormat(fileName, stream))
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
@@ -350,7 +350,7 @@ namespace ByteGuard.FileValidator
             // Validate antimalware scan if configured.
             if (_antimalwareScanner != null)
             {
-                var isClean = IsMalwareClean(fileName, content);
+                var isClean = IsMalwareClean(fileName, stream);
                 if (!isClean)
                 {
                     if (_configuration.ThrowExceptionOnInvalidFile)
@@ -366,32 +366,27 @@ namespace ByteGuard.FileValidator
         }
 
         /// <summary>
-        /// Whether the given file is valid based on its type, signature, and potentially its internal structure (for Open XML documents).
+        /// Whether the given file is valid based on all parameters.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
-        /// <param name="stream">Stream content of the file.</param>
-        /// <returns><c>true</c> if supported file type, valid signature, and valid Open XML (if the file type is expected to be an Open XML file), <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
+        /// <param name="content">Byte array content of the file.</param>
+        /// <returns><c>true</c> if valid based on all parameters, <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidFile(string fileName, Stream stream)
+        public bool IsValidFile(string fileName, byte[] content)
         {
-            using (var memoryStream = new MemoryStream())
+            using (var stream = new MemoryStream(content))
             {
-                stream.CopyTo(memoryStream);
-
-                memoryStream.Position = 0;
-                var content = memoryStream.ToArray();
-
-                return IsValidFile(fileName, content);
+                return IsValidFile(fileName, stream);
             }
         }
 
         /// <summary>
-        /// Whether the given file is valid based on its type, signature, and potentially its internal structure (for Open XML documents).
+        /// Whether the given file is valid based on all parameters.
         /// </summary>
         /// <param name="filePath">Full path to the file including filename and extension (e.g. <c>C:\temp\my-file.jpg</c>).</param>
-        /// <returns><c>true</c> if supported file type, valid signature, and valid Open XML (if the file type is expected to be an Open XML file), <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
+        /// <returns><c>true</c> if valid based on all parameters, <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
@@ -448,18 +443,17 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering to the expected signature for its file type.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
         /// <para>File signatures (also known as "magic numbers") are specific sequences of bytes at the beginning of a file that indicate its format.
         /// Various file header signatures are sourced from <a href="https://en.wikipedia.org/wiki/List_of_file_signatures">Wikipedia</a>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
-        /// <param name="content">Byte array content of the file.</param>
+        /// <param name="stream">Stream content of the file.</param>
         /// <returns><c>true</c> if the file signature matches one of the expected signatures for the file type, <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool HasValidSignature(string fileName, byte[] content)
+        /// <exception cref="InvalidOperationException">Thrown if the stream is not readable or seekable.</exception>
+        public bool HasValidSignature(string fileName, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -473,13 +467,24 @@ namespace ByteGuard.FileValidator
                 throw new ArgumentException("Unable to deduct file type (extension) based on the file name.", nameof(fileName));
             }
 
-            if (content is null || content.Length == 0)
+            if (stream is null || stream.Length == 0)
             {
-                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating file signature.");
+                throw new ArgumentNullException(nameof(stream), "Stream cannot be null or empty when validating file signature.");
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new InvalidOperationException("Stream is not readable.");
+            }
+
+            if (!stream.CanSeek)
+            {
+                throw new InvalidOperationException("Stream is not seekable.");
             }
 
             var fileDefinition = SupportedFileDefinitions.FirstOrDefault(fd =>
                 fd.FileType.Equals(extension, StringComparison.InvariantCultureIgnoreCase));
+
             if (fileDefinition == null)
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
@@ -495,7 +500,7 @@ namespace ByteGuard.FileValidator
             // for this purpose.
             if (fileDefinition.FileType.Equals(FileExtensions.Pdf))
             {
-                using (var pdfValidator = new PdfValidator(content))
+                using (var pdfValidator = new PdfValidator(stream))
                 {
                     var isValidPdf = pdfValidator.IsValidPdfSignature();
                     if (!isValidPdf && _configuration.ThrowExceptionOnInvalidFile)
@@ -508,11 +513,10 @@ namespace ByteGuard.FileValidator
             }
 
             // Calculate signature start and end index.
-            var signatureStart = fileDefinition.SignatureOffset;
             var signatureEnd = fileDefinition.SignatureOffset + fileDefinition.ValidSignatures.Max(s => s.Length);
 
             // Check whether the content is valid according to the primary header signature length.
-            if (content.Length < signatureEnd)
+            if (stream.Length < signatureEnd)
             {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
@@ -524,8 +528,16 @@ namespace ByteGuard.FileValidator
 
             // Check primary header signature.
             var signatureLength = fileDefinition.ValidSignatures.Max(s => s.Length);
-            var headerBytes = content.Skip(signatureStart).Take(signatureLength).ToArray();
-            var result = fileDefinition.ValidSignatures.Any(signature => headerBytes.Take(signature.Length).SequenceEqual(signature));
+
+            byte[] headerBytes = new byte[signatureLength];
+            stream.Seek(fileDefinition.SignatureOffset, SeekOrigin.Begin);
+#if NET8_0_OR_GREATER
+            stream.ReadExactly(headerBytes, 0, signatureLength);
+#else
+            _ = stream.Read(headerBytes, 0, signatureLength);
+#endif
+
+            var result = fileDefinition.ValidSignatures.Any(signature => headerBytes.SequenceEqual(signature));
 
             // Might as well return early as the subtype check is irrelevant if the primary signature is invalid.
             if (!result)
@@ -541,12 +553,10 @@ namespace ByteGuard.FileValidator
             // Check subtype header signature.
             if (fileDefinition.HasSubtype)
             {
-                // Calculate signature start and end index.
-                var subtypeSignatureStart = fileDefinition.SubtypeOffset;
                 var subtypeSignatureEnd = fileDefinition.SubtypeOffset + fileDefinition.ValidSubtypeSignatures.Max(s => s.Length);
 
                 // Check whether the content is valid according to the primary header signature length.
-                if (content.Length < subtypeSignatureEnd)
+                if (stream.Length < subtypeSignatureEnd)
                 {
                     if (_configuration.ThrowExceptionOnInvalidFile)
                     {
@@ -558,7 +568,15 @@ namespace ByteGuard.FileValidator
 
                 // Check subtype header signature.
                 var subtypeSignatureLength = fileDefinition.ValidSubtypeSignatures.Max(s => s.Length);
-                var subtypeHeaderBytes = content.Skip(subtypeSignatureStart).Take(subtypeSignatureLength).ToArray();
+
+                var subtypeHeaderBytes = new byte[subtypeSignatureLength];
+                stream.Seek(fileDefinition.SubtypeOffset, SeekOrigin.Begin);
+#if NET8_0_OR_GREATER
+                stream.ReadExactly(subtypeHeaderBytes, 0, subtypeSignatureLength);
+#else
+                _ = stream.Read(subtypeHeaderBytes, 0, subtypeSignatureLength);
+#endif
+
                 result = fileDefinition.ValidSubtypeSignatures.Any(signature => subtypeHeaderBytes.Take(signature.Length).SequenceEqual(signature));
             }
 
@@ -576,23 +594,28 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering to the expected signature for its file type.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
         /// <para>File signatures (also known as "magic numbers") are specific sequences of bytes at the beginning of a file that indicate its format.
         /// Various file header signatures are sourced from <a href="https://en.wikipedia.org/wiki/List_of_file_signatures">Wikipedia</a>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
-        /// <param name="stream">Stream content of the file.</param>
+        /// <param name="content">Byte array content of the file.</param>
         /// <returns><c>true</c> if the file signature matches one of the expected signatures for the file type, <c>false</c> otherwise, unless <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool HasValidSignature(string fileName, Stream stream)
+        public bool HasValidSignature(string fileName, byte[] content)
         {
-            var maxHeaderLength = GetMaxHeaderLength();
+            if (content is null || content.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating file signature.");
+            }
 
-            var buffer = new byte[maxHeaderLength];
-            _ = stream.Read(buffer, 0, maxHeaderLength);
-
-            return HasValidSignature(fileName, buffer);
+            using (var stream = new MemoryStream(content))
+            {
+                return HasValidSignature(fileName, stream);
+            }
         }
 
         /// <summary>
@@ -631,14 +654,14 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering to the expected signature for its file type.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
         /// </remarks>
-        /// <param name="content">Byte array content of the file.</param>
+        /// <param name="stream">Stream content of the file.</param>
         /// <returns><c>true</c> if the file size is below the file size limit, <c>false</c> otherwise.</returns>
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
-        public bool HasValidSize(byte[] content)
+        public bool HasValidSize(Stream stream)
         {
-            var isBelowLimit = content.Length <= _configuration.FileSizeLimit;
+            var isBelowLimit = stream.Length <= _configuration.FileSizeLimit;
 
             if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
@@ -654,14 +677,14 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering to the expected signature for its file type.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
         /// </remarks>
-        /// <param name="stream">Stream content of the file.</param>
+        /// <param name="content">Byte array content of the file.</param>
         /// <returns><c>true</c> if the file size is below the file size limit, <c>false</c> otherwise.</returns>
         /// <exception cref="InvalidFileSizeException">>Thrown if the file size is greater than the configured file size limit and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled</exception>
-        public bool HasValidSize(Stream stream)
+        public bool HasValidSize(byte[] content)
         {
-            var isBelowLimit = stream.Length <= _configuration.FileSizeLimit;
+            var isBelowLimit = content.Length <= _configuration.FileSizeLimit;
 
             if (_configuration.ThrowExceptionOnInvalidFile && !isBelowLimit)
             {
@@ -702,15 +725,14 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering the Open XML format.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.docx</c>).</param>
-        /// <param name="content">Byte content of the file.</param>
+        /// <param name="stream">Stream content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidOpenXmlDocument(string fileName, byte[] content)
+        /// <exception cref="InvalidOperationException">Thrown if the stream is not readable.</exception> 
+        public bool IsValidOpenXmlDocument(string fileName, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -720,13 +742,17 @@ namespace ByteGuard.FileValidator
             var extension = Path.GetExtension(fileName);
             if (string.IsNullOrWhiteSpace(extension))
             {
-                throw new ArgumentException("Unable to deduct file type (extension) based on the file name.",
-                    nameof(fileName));
+                throw new ArgumentException("Unable to deduct file type (extension) based on the file name.", nameof(fileName));
             }
 
-            if (content is null || content.Length == 0)
+            if (stream is null || stream.Length == 0)
             {
-                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating Open XML structure.");
+                throw new ArgumentNullException(nameof(stream), "Stream cannot be null or empty when validating file signature.");
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new InvalidOperationException("Stream is not readable.");
             }
 
             try
@@ -743,29 +769,25 @@ namespace ByteGuard.FileValidator
                 }
 
                 bool isValid;
-
-                using (var memoryStream = new MemoryStream(content))
+                switch (extension.ToLowerInvariant())
                 {
-                    switch (extension.ToLowerInvariant())
-                    {
-                        case FileExtensions.Docx:
-                            {
-                                isValid = OpenXmlFormatValidator.IsValidWordDocument(memoryStream);
-                                break;
-                            }
-                        case FileExtensions.Xlsx:
-                            {
-                                isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(memoryStream);
-                                break;
-                            }
-                        case FileExtensions.Pptx:
-                            {
-                                isValid = OpenXmlFormatValidator.IsValidPresentationDocument(memoryStream);
-                                break;
-                            }
-                        default:
-                            throw new InvalidOpenXmlFormatException("The provided file extension is not recognized as an Open XML file.");
-                    }
+                    case FileExtensions.Docx:
+                        {
+                            isValid = OpenXmlFormatValidator.IsValidWordDocument(stream);
+                            break;
+                        }
+                    case FileExtensions.Xlsx:
+                        {
+                            isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(stream);
+                            break;
+                        }
+                    case FileExtensions.Pptx:
+                        {
+                            isValid = OpenXmlFormatValidator.IsValidPresentationDocument(stream);
+                            break;
+                        }
+                    default:
+                        throw new InvalidOpenXmlFormatException("The provided file extension is not recognized as an Open XML file.");
                 }
 
                 if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
@@ -822,22 +844,24 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering the Open XML format.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.docx</c>).</param>
-        /// <param name="stream">Stream content of the file.</param>
+        /// <param name="content">Byte content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidOpenXmlDocument(string fileName, Stream stream)
+        public bool IsValidOpenXmlDocument(string fileName, byte[] content)
         {
-            using (var memoryStream = new MemoryStream())
+            if (content is null || content.Length == 0)
             {
-                stream.CopyTo(memoryStream);
+                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating Open XML structure.");
+            }
 
-                memoryStream.Position = 0;
-                var content = memoryStream.ToArray();
-
-                return IsValidOpenXmlDocument(fileName, content);
+            using (var memoryStream = new MemoryStream(content))
+            {
+                return IsValidOpenXmlDocument(fileName, memoryStream);
             }
         }
 
@@ -874,15 +898,14 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering the Open Document Format specification.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
-        /// <param name="content">Byte content of the file.</param>
+        /// <param name="stream">Stream content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
-        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidOpenDocumentFormat(string fileName, byte[] content)
+        /// <exception cref="InvalidOperationException">Thrown if the stream is not readable or seekable.</exception>
+        public bool IsValidOpenDocumentFormat(string fileName, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -895,9 +918,14 @@ namespace ByteGuard.FileValidator
                 throw new ArgumentException("Unable to deduct file type (extension) based on the file name.", nameof(fileName));
             }
 
-            if (content is null || content.Length == 0)
+            if (stream is null || stream.Length == 0)
             {
-                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating Open Document Format structure.");
+                throw new ArgumentNullException(nameof(stream), "Stream cannot be null or empty when validating file signature.");
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new InvalidOperationException("Stream is not readable.");
             }
 
             try
@@ -915,18 +943,15 @@ namespace ByteGuard.FileValidator
 
                 bool isValid;
 
-                using (var memoryStream = new MemoryStream(content))
+                switch (extension.ToLowerInvariant())
                 {
-                    switch (extension.ToLowerInvariant())
-                    {
-                        case FileExtensions.Odt:
-                            {
-                                isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(memoryStream);
-                                break;
-                            }
-                        default:
-                            throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format file.");
-                    }
+                    case FileExtensions.Odt:
+                        {
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(stream);
+                            break;
+                        }
+                    default:
+                        throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format file.");
                 }
 
                 if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
@@ -953,21 +978,23 @@ namespace ByteGuard.FileValidator
         /// <remarks>
         /// <para>WARNING: This does not check if the file type is supported according to the configuration of the FileValidator,
         /// but only validates if the provided file is adhering the Open Document Format specification.</para>
-        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,Stream)"/>.</para>
+        /// <para>To completely validate the file based on all parameters, please use <see cref="IsValidFile(string,byte[])"/>.</para>
         /// </remarks>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
-        /// <param name="stream">Stream content of the file.</param>
+        /// <param name="content">Byte content of the file.</param>
         /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
-        public bool IsValidOpenDocumentFormat(string fileName, Stream stream)
+        public bool IsValidOpenDocumentFormat(string fileName, byte[] content)
         {
-            using (var memoryStream = new MemoryStream())
+            if (content is null || content.Length == 0)
             {
-                stream.CopyTo(memoryStream);
+                throw new ArgumentNullException(nameof(content), "File content cannot be null or empty when validating Open Document Format structure.");
+            }
 
-                memoryStream.Position = 0;
-                var content = memoryStream.ToArray();
-
+            using (var memoryStream = new MemoryStream(content))
+            {
                 return IsValidOpenDocumentFormat(fileName, content);
             }
         }
@@ -1030,11 +1057,27 @@ namespace ByteGuard.FileValidator
         /// <exception cref="InvalidOperationException">Thrown if no antimalware scanner has been configured for the FileValidator.</exception>
         /// <exception cref="MalwareDetectedException">Thrown if malware was detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="AntimalwareScannerException">Thrown if the configured antimalware scanner encountered an error while scanning the file for malware.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the stream is not readable or seekable.</exception>
         public bool IsMalwareClean(string fileName, Stream stream)
         {
             if (_antimalwareScanner is null)
             {
                 throw new InvalidOperationException("No antimalware scanner has been configured for the FileValidator.");
+            }
+
+            if (stream is null || stream.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(stream), "Stream cannot be null or empty when validating file signature.");
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new InvalidOperationException("Stream is not readable.");
+            }
+
+            if (!stream.CanSeek)
+            {
+                throw new InvalidOperationException("Stream is not seekable.");
             }
 
             stream.Seek(0, SeekOrigin.Begin);
@@ -1121,18 +1164,6 @@ namespace ByteGuard.FileValidator
         {
             var extensions = Path.GetExtension(fileName);
             return OpenDocumentFormats.Contains(extensions.ToLowerInvariant());
-        }
-
-        /// <summary>
-        /// Calculate and retrieve the maximum possible header length based on the supported file definitions.
-        /// </summary>
-        /// <returns>Maximum possible header length</returns>
-        private int GetMaxHeaderLength()
-        {
-            return SupportedFileDefinitions.Max(f =>
-                f.SignatureOffset
-                + (f.ValidSignatures.Count > 0 ? f.ValidSignatures.Max(s => s.Length) : 0)
-                + (f.ValidSubtypeSignatures.Count > 0 ? f.ValidSubtypeSignatures.Max(s => s.Length) : 0));
         }
     }
 }

@@ -41,7 +41,7 @@ namespace ByteGuard.FileValidator.Validators
         /// <param name="stream">Content stream</param>
         /// <param name="leaveOpen">Whether the stream should be closed during dispose.</param>
         /// <exception cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</exception>
-        public PdfValidator(Stream stream, bool leaveOpen = false)
+        public PdfValidator(Stream stream, bool leaveOpen = true)
         {
             if (stream == null || stream.Length == 0)
             {
