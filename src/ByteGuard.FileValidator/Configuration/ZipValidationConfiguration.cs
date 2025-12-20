@@ -59,6 +59,12 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public int MaxEntries { get; set; } = 10_000;
 
+        /// <summary>
+        /// Whether <see cref="MaxEntries"/> is enabled based on its value.
+        /// </summary>
+        /// <remarks>
+        /// Will return <c>false</c> if <see cref="MaxEntries"/> is set to <c>-1</c>.
+        /// </remarks>
         internal bool MaxEntriesEnabled => MaxEntries > 0;
 
         /// <summary>
@@ -69,6 +75,12 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public long TotalUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(512);
 
+        /// <summary>
+        /// Whether <see cref="TotalUncompressedSizeLimit"/> is enabled based on its value.
+        /// </summary>
+        /// <remarks>
+        /// Will return <c>false</c> if <see cref="TotalUncompressedSizeLimit"/> is set to <c>-1</c>.
+        /// </remarks>
         internal bool TotalUncompressedSizeLimitEnabled => TotalUncompressedSizeLimit > 0;
 
         /// <summary>
@@ -79,6 +91,12 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public long EntryUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(128);
 
+        /// <summary>
+        /// Whether <see cref="EntryUncompressedSizeLimit"/> is enabled based on its value.
+        /// </summary>
+        /// <remarks>
+        /// Will return <c>false</c> if <see cref="EntryUncompressedSizeLimit"/> is set to <c>-1</c>.
+        /// </remarks>
         internal bool EntryUncompressedSizeLimitEnabled => EntryUncompressedSizeLimit > 0;
 
         /// <summary>
@@ -89,6 +107,12 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public double CompressionRateLimit { get; set; } = 200.0; // 200:1
 
+        /// <summary>
+        /// Whether <see cref="CompressionRateLimit"/> is enabled based on its value.
+        /// </summary>
+        /// <remarks>
+        /// Will return <c>false</c> if <see cref="CompressionRateLimit"/> is set to <c>-1</c>.
+        /// </remarks>
         internal bool CompressionRateLimitEnabled => CompressionRateLimit > 0;
 
         /// <summary>
