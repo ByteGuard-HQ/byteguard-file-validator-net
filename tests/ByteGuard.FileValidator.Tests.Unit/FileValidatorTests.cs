@@ -2,6 +2,7 @@
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
 using ByteGuard.FileValidator.Scanners;
+using ByteGuard.FileValidator.Tests.Unit.TestHelpers;
 using NSubstitute;
 
 namespace ByteGuard.FileValidator.Tests.Unit;
@@ -1004,6 +1005,151 @@ public class FileValidatorTests
 
         // Assert
         Assert.Throws<InvalidOpenXmlFormatException>(act);
+    }
+
+    [Theory(DisplayName = "IsValidFile(string, Stream) should throw InvalidZipArchiveException for entry names with suspicious paths")]
+    [InlineData("../evil.txt")]
+    [InlineData("..\\evil.txt")]
+    [InlineData("/evil.txt")]
+    [InlineData("\\evil.txt")]
+    [InlineData("C:/evil")]
+    [InlineData("C:\\evil")]
+    public void IsValidFile_SuspiciousFilePaths_ShouldThrowInvalidZipArchiveException(string entryName)
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [FileExtensions.Docx],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true
+        };
+        var fileValidator = new FileValidator(config);
+
+        using var zipStream = ZipTestFactory.CreateZipWithEntry(entryName);
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("evil.docx", zipStream);
+
+        // Assert
+        Assert.Throws<InvalidZipArchiveException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, Stream) should throw InvalidZipArchiveException when MaxEntries is exceeded")]
+    public void IsValidFile_MaxEntriesExceeded_ShouldThrowInvalidZipArchiveException()
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [FileExtensions.Docx],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true,
+            ZipPreflightConfiguration = new()
+            {
+                MaxEntries = 3
+            }
+        };
+        var fileValidator = new FileValidator(config);
+
+        var entries = new Dictionary<string, string>()
+        {
+            { "file1.txt", "Content 1" },
+            { "file2.txt", "Content 2" },
+            { "file3.txt", "Content 3" },
+            { "file4.txt", "Content 4" } // Exceeds MaxEntries
+        };
+        using var zipStream = ZipTestFactory.CreateZipWithEntries(entries);
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("exceed.docx", zipStream);
+
+        // Assert
+        Assert.Throws<InvalidZipArchiveException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, Stream) should throw InvalidZipArchiveException when EntryUncompressedSizeLimit is exceeded")]
+    public void IsValidFile_EntryUncompressedSizeLimitExceeded_ShouldThrowInvalidZipArchiveException()
+    {
+        // Arrange
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [FileExtensions.Docx],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true,
+            ZipPreflightConfiguration = new()
+            {
+                EntryUncompressedSizeLimit = 10 // 10 bytes
+            }
+        };
+        var fileValidator = new FileValidator(config);
+
+        using var zipStream = ZipTestFactory.CreateZipWithEntry("largefile.txt", new string('A', 20)); // 20 bytes, exceeds limit
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("exceed.docx", zipStream);
+
+        // Assert
+        Assert.Throws<InvalidZipArchiveException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, Stream) should throw InvalidZipArchiveException when CompressionRateLimit is exceeded")]
+    public void IsValidFile_CompressionRateLimitExceeded_ShouldThrowInvalidZipArchiveException()
+    {
+        // Arrange
+        var zipBytes = ZipTestFactory.CreateZipWithHiglyCompressibleEntry(uncompressedBytes: 5 * 1024 * 1024); // 5 MB
+        var actualRatio = ZipTestFactory.GetCompressionRate(zipBytes);
+
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [FileExtensions.Docx],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true,
+            ZipPreflightConfiguration = new()
+            {
+                CompressionRateLimit = actualRatio - 0.1 // Set limit just below actual ratio to trigger exception
+            }
+        };
+        var fileValidator = new FileValidator(config);
+
+        using var zipStream = new MemoryStream(zipBytes);
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("exceed.docx", zipStream);
+
+        // Assert
+        Assert.Throws<InvalidZipArchiveException>(act);
+    }
+
+    [Fact(DisplayName = "IsValidFile(string, Stream) should throw InvalidZipArchiveException when TotalUncompressedSizeLimit is exceeded")]
+    public void IsValidFile_TotalUncompressedSizeLimitExceeded_ShouldThrowInvalidZipArchiveException()
+    {
+        // Arrange
+        var zipBytes = ZipTestFactory.CreateZipWithFixedSizeEntries(entryCount: 3, bytesPerEntry: 10); // Total 30 bytes
+
+        var config = new FileValidatorConfiguration
+        {
+            SupportedFileTypes = [FileExtensions.Docx],
+            FileSizeLimit = ByteSize.MegaBytes(25),
+            ThrowExceptionOnInvalidFile = true,
+            ZipPreflightConfiguration = new()
+            {
+                RejectSuspiciousPaths = false,
+
+                MaxEntries = -1,
+                EntryUncompressedSizeLimit = -1,
+                CompressionRateLimit = -1,
+
+                TotalUncompressedSizeLimit = 29 // Set limit below total size to trigger exception
+            }
+        };
+        var fileValidator = new FileValidator(config);
+
+        using var zipStream = new MemoryStream(zipBytes);
+
+        // Act
+        Action act = () => fileValidator.IsValidFile("exceed.docx", zipStream);
+
+        // Assert
+        Assert.Throws<InvalidZipArchiveException>(act);
     }
 
     [Theory(DisplayName = "IsValidFile(string, byte[]) should throw InvalidOpenDocumentFormatException for invalid ODF files")]
