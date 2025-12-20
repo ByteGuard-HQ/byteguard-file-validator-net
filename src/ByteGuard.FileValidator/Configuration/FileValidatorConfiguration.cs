@@ -60,6 +60,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public int MaxEntries { get; set; } = 10_000;
 
+        internal bool MaxEntriesEnabled => MaxEntries > 0;
+
         /// <summary>
         /// Max allowed total uncompressed size.
         /// </summary>
@@ -67,6 +69,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// Defaults to 512MB. Use <c>-1</c> for no limit.
         /// </remarks>
         public long TotalUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(512);
+
+        internal bool TotalUncompressedSizeLimitEnabled => TotalUncompressedSizeLimit > 0;
 
         /// <summary>
         /// Max allowed uncompressed size for each entry within the ZIP-archive.
@@ -76,6 +80,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// </remarks>
         public long EntryUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(128);
 
+        internal bool EntryUncompressedSizeLimitEnabled => EntryUncompressedSizeLimit > 0;
+
         /// <summary>
         /// Max allowed compression rate.
         /// </summary>
@@ -83,6 +89,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// Defaults to 200:1. Use <c>-1</c> for no limit.
         /// </remarks>
         public double CompressionRateLimit { get; set; } = 200.0; // 200:1
+
+        internal bool CompressionRateLimitEnabled => CompressionRateLimit > 0;
 
         /// <summary>
         /// Whether to reject suspicious paths within the ZIP-archive.

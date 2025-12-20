@@ -36,7 +36,7 @@ internal static class ZipValidator
         using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Read, leaveOpen: true))
         {
             // Validat maximum number of entries.
-            if (archive.Entries.Count > options.MaxEntries)
+            if (options.MaxEntriesEnabled && archive.Entries.Count > options.MaxEntries)
             {
                 throw new InvalidZipArchiveException($"The total count of entries exceeds the defined maximum of {options.MaxEntries}");
             }
@@ -59,14 +59,14 @@ internal static class ZipValidator
                 }
 
                 // Validate uncompressed size.
-                if (uncompressed > options.EntryUncompressedSizeLimit)
+                if (options.EntryUncompressedSizeLimitEnabled && uncompressed > options.EntryUncompressedSizeLimit)
                 {
                     throw new InvalidZipArchiveException($"'{entry.FullName}' too large uncompressed ({compressed} > {options.EntryUncompressedSizeLimit}).");
                 }
 
                 // Validate total uncompressed size.
                 totalUncompressed += uncompressed;
-                if (totalUncompressed > options.TotalUncompressedSizeLimit)
+                if (options.TotalUncompressedSizeLimitEnabled && totalUncompressed > options.TotalUncompressedSizeLimit)
                 {
                     throw new InvalidZipArchiveException($"ZIP total uncompressed too large ({totalUncompressed} > {options.TotalUncompressedSizeLimit})");
                 }
@@ -80,7 +80,7 @@ internal static class ZipValidator
                     }
 
                     var ratio = (double)uncompressed / compressed;
-                    if (ratio > options.CompressionRateLimit)
+                    if (options.CompressionRateLimitEnabled && ratio > options.CompressionRateLimit)
                     {
                         throw new InvalidZipArchiveException($"Entry {entry.FullName} compression rate to high ({ratio:0.0}:1 > {options.CompressionRateLimit:0.0}:1).");
                     }
