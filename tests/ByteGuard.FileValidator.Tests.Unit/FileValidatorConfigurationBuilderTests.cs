@@ -36,8 +36,8 @@ public class FileValidatorConfigurationBuilderTests
         Assert.False(config.ThrowExceptionOnInvalidFile);
     }
 
-    [Fact(DisplayName = "DisableZipPreflight should set Enabled to false")]
-    public void DisableZipPreflight_ShouldSetEnabledToFalse()
+    [Fact(DisplayName = "DisableZipValidation should set Enabled to false")]
+    public void DisableZipValidation_ShouldSetEnabledToFalse()
     {
         // Arrange
         var builder = new FileValidatorConfigurationBuilder();
@@ -52,8 +52,8 @@ public class FileValidatorConfigurationBuilderTests
         Assert.False(config.ZipValidationConfiguration.Enabled);
     }
 
-    [Fact(DisplayName = "ConfigureZipPreflight should populate all properties values as provided")]
-    public void ConfigureZipPreflight_ShouldPopulateAllPropertiesValuesAsProvided()
+    [Fact(DisplayName = "ConfigureZipValidation should populate all properties values as provided")]
+    public void ConfigureZipValidation_ShouldPopulateAllPropertiesValuesAsProvided()
     {
         // Arrange
         var builder = new FileValidatorConfigurationBuilder();

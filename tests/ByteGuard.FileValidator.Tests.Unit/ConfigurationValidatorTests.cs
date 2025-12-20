@@ -95,8 +95,8 @@ public class ConfigurationValidatorTests
         Assert.Throws<ArgumentException>(act);
     }
 
-    [Fact(DisplayName = "ThrowIfInvalid should throw ArgumentNullException if the ZIP preflight options is null")]
-    public void ThrowIfInvalid_NullZipPreflightConfiguration_ShouldThrowArgumentNullException()
+    [Fact(DisplayName = "ThrowIfInvalid should throw ArgumentNullException if the ZIP validatiomn options is null")]
+    public void ThrowIfInvalid_NullZipValidationConfiguration_ShouldThrowArgumentNullException()
     {
         // Arrange
         var config = new FileValidatorConfiguration
@@ -113,8 +113,8 @@ public class ConfigurationValidatorTests
         Assert.Throws<ArgumentNullException>(act);
     }
 
-    [Fact(DisplayName = "ThrowIfInvalid should not throw any exception if the ZIP preflight options is disabled though values are invalid")]
-    public void ThrowIfInvalid_ZipPreflightNotEnabledWithIncorrectValues_ShouldPassValidation()
+    [Fact(DisplayName = "ThrowIfInvalid should not throw any exception if the ZIP validation options is disabled though values are invalid")]
+    public void ThrowIfInvalid_ZipValidationNotEnabledWithIncorrectValues_ShouldPassValidation()
     {
         // Arrange
         var config = new FileValidatorConfiguration
