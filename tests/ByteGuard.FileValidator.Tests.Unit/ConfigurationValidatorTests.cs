@@ -103,7 +103,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = null!
+            ZipValidationConfiguration = null!
         };
 
         // Act
@@ -121,7 +121,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = false,
                 MaxEntries = -25,
@@ -148,7 +148,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = true,
                 MaxEntries = value,
@@ -175,7 +175,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = true,
                 MaxEntries = -1,
@@ -202,7 +202,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = true,
                 MaxEntries = -1,
@@ -227,7 +227,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = true,
                 MaxEntries = -1,
@@ -255,7 +255,7 @@ public class ConfigurationValidatorTests
         {
             SupportedFileTypes = new() { ".jpg" },
             FileSizeLimit = 25,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 Enabled = true,
                 MaxEntries = -1,

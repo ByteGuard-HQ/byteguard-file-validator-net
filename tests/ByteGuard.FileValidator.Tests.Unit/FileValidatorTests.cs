@@ -1043,7 +1043,7 @@ public class FileValidatorTests
             SupportedFileTypes = [FileExtensions.Docx],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = true,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 MaxEntries = 3
             }
@@ -1075,7 +1075,7 @@ public class FileValidatorTests
             SupportedFileTypes = [FileExtensions.Docx],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = true,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 EntryUncompressedSizeLimit = 10 // 10 bytes
             }
@@ -1103,7 +1103,7 @@ public class FileValidatorTests
             SupportedFileTypes = [FileExtensions.Docx],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = true,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 CompressionRateLimit = actualRatio - 0.1 // Set limit just below actual ratio to trigger exception
             }
@@ -1130,7 +1130,7 @@ public class FileValidatorTests
             SupportedFileTypes = [FileExtensions.Docx],
             FileSizeLimit = ByteSize.MegaBytes(25),
             ThrowExceptionOnInvalidFile = true,
-            ZipPreflightConfiguration = new()
+            ZipValidationConfiguration = new()
             {
                 RejectSuspiciousPaths = false,
 

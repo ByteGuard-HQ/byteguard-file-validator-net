@@ -44,12 +44,12 @@ public class FileValidatorConfigurationBuilderTests
 
         // Act
         builder.AllowFileTypes(".pdf")
-            .DisableZipPreflight();
+            .DisableZipValidation();
 
         var config = builder.Build();
 
         // Assert
-        Assert.False(config.ZipPreflightConfiguration.Enabled);
+        Assert.False(config.ZipValidationConfiguration.Enabled);
     }
 
     [Fact(DisplayName = "ConfigureZipPreflight should populate all properties values as provided")]
@@ -58,7 +58,7 @@ public class FileValidatorConfigurationBuilderTests
         // Arrange
         var builder = new FileValidatorConfigurationBuilder();
 
-        var expected = new ZipPreflightConfiguration()
+        var expected = new ZipValidationConfiguration()
         {
             Enabled = false,
             MaxEntries = 10,
@@ -70,7 +70,7 @@ public class FileValidatorConfigurationBuilderTests
 
         // Act
         builder.AllowFileTypes(".pdf")
-            .ConfigureZipPreflight(options =>
+            .ConfigureZipValidation(options =>
             {
                 options.Enabled = expected.Enabled;
                 options.MaxEntries = expected.MaxEntries;
@@ -83,12 +83,12 @@ public class FileValidatorConfigurationBuilderTests
         var config = builder.Build();
 
         // Assert
-        Assert.Equal(config.ZipPreflightConfiguration.Enabled, expected.Enabled);
-        Assert.Equal(config.ZipPreflightConfiguration.MaxEntries, expected.MaxEntries);
-        Assert.Equal(config.ZipPreflightConfiguration.TotalUncompressedSizeLimit, expected.TotalUncompressedSizeLimit);
-        Assert.Equal(config.ZipPreflightConfiguration.EntryUncompressedSizeLimit, expected.EntryUncompressedSizeLimit);
-        Assert.Equal(config.ZipPreflightConfiguration.CompressionRateLimit, expected.CompressionRateLimit);
-        Assert.Equal(config.ZipPreflightConfiguration.RejectSuspiciousPaths, expected.RejectSuspiciousPaths);
+        Assert.Equal(config.ZipValidationConfiguration.Enabled, expected.Enabled);
+        Assert.Equal(config.ZipValidationConfiguration.MaxEntries, expected.MaxEntries);
+        Assert.Equal(config.ZipValidationConfiguration.TotalUncompressedSizeLimit, expected.TotalUncompressedSizeLimit);
+        Assert.Equal(config.ZipValidationConfiguration.EntryUncompressedSizeLimit, expected.EntryUncompressedSizeLimit);
+        Assert.Equal(config.ZipValidationConfiguration.CompressionRateLimit, expected.CompressionRateLimit);
+        Assert.Equal(config.ZipValidationConfiguration.RejectSuspiciousPaths, expected.RejectSuspiciousPaths);
     }
 
     [Fact(DisplayName = "Build throws exception when configuration is invalid")]

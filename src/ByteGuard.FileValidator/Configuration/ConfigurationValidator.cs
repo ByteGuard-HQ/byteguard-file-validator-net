@@ -55,9 +55,9 @@ namespace ByteGuard.FileValidator.Configuration
         /// <param name="configuration">File validator configuration object.</param>
         private static void ValidateZipPreflightConfiguration(FileValidatorConfiguration configuration)
         {
-            var zipConfig = configuration.ZipPreflightConfiguration
+            var zipConfig = configuration.ZipValidationConfiguration
                 ?? throw new ArgumentNullException(
-                    nameof(configuration.ZipPreflightConfiguration),
+                    nameof(configuration.ZipValidationConfiguration),
                     $"ZipPreflightConfiguration cannot be null. Disable the preflight using 'Enabled' if ZIP validation is unwanted.");
 
             if (zipConfig.Enabled)

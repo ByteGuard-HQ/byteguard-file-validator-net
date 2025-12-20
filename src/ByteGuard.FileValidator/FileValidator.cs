@@ -290,6 +290,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string fileName, Stream stream)
         {
             // Validate file type.
@@ -374,6 +377,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string fileName, byte[] content)
         {
             using (var stream = new MemoryStream(content))
@@ -391,6 +397,9 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -732,6 +741,7 @@ namespace ByteGuard.FileValidator
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the stream is not readable.</exception> 
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenXmlDocument(string fileName, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -768,8 +778,14 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
-                // Perform ZIP preflight validation.
-                ZipValidator.Validate(stream, _configuration.ZipPreflightConfiguration);
+                // Perform ZIP validation.
+                bool shouldRunZipValidation = _configuration.ZipValidationConfiguration.Enabled
+                    && _configuration.ZipValidationConfiguration.Scope.HasFlag(ZipValidationScope.ZipBasedFormats);
+
+                if (shouldRunZipValidation)
+                {
+                    ZipValidator.Validate(stream, _configuration.ZipValidationConfiguration);
+                }
 
                 stream.Seek(0, SeekOrigin.Begin);
 
@@ -866,6 +882,7 @@ namespace ByteGuard.FileValidator
         /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
         /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenXmlDocument(string fileName, byte[] content)
         {
             if (content is null || content.Length == 0)
@@ -891,6 +908,7 @@ namespace ByteGuard.FileValidator
         /// <returns><c>true</c> if the file is a valid Open XML file, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if Open XML file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenXmlDocument(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -919,6 +937,7 @@ namespace ByteGuard.FileValidator
         /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the stream is not readable or seekable.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenDocumentFormat(string fileName, Stream stream)
         {
             if (string.IsNullOrWhiteSpace(fileName))
@@ -955,8 +974,14 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
-                // Perform ZIP preflight validation.
-                ZipValidator.Validate(stream, _configuration.ZipPreflightConfiguration);
+                // Perform ZIP validation.
+                bool shouldRunZipValidation = _configuration.ZipValidationConfiguration.Enabled
+                    && _configuration.ZipValidationConfiguration.Scope.HasFlag(ZipValidationScope.ZipBasedFormats);
+
+                if (shouldRunZipValidation)
+                {
+                    ZipValidator.Validate(stream, _configuration.ZipValidationConfiguration);
+                }
 
                 stream.Seek(0, SeekOrigin.Begin);
 
@@ -1013,6 +1038,7 @@ namespace ByteGuard.FileValidator
         /// <exception cref="ArgumentNullException">Thrown if the file name is null, empty, or whitespace, or if the byte content is null.</exception>
         /// <exception cref="ArgumentException">Thrown if unable to deduct file type (extension) from the given file name.</exception>
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenDocumentFormat(string fileName, byte[] content)
         {
             if (content is null || content.Length == 0)
@@ -1038,6 +1064,7 @@ namespace ByteGuard.FileValidator
         /// <returns><c>true</c> if the file is a valid Open Document Format (ODF) file, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the <paramref name="filePath"/> is null or whitespace.</exception>
         /// <exception cref="InvalidOpenDocumentFormatException">Thrown if Open Document Format (ODF) file is invalid based on the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidZipArchiveException">Thrown if the ZIP archive validation fails according to the <see cref="FileValidatorConfiguration.ZipValidationConfiguration"/> options and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidOpenDocumentFormat(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))

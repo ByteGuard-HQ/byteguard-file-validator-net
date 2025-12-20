@@ -10,8 +10,8 @@ internal static class ZipValidator
     /// Validate ZIP archive.
     /// </summary>
     /// <param name="zipStream">ZIP content stream.</param>
-    /// <param name="options">ZIP preflight configuration.</param>
-    public static void Validate(Stream zipStream, ZipPreflightConfiguration options)
+    /// <param name="options">ZIP validation configuration.</param>
+    public static void Validate(Stream zipStream, ZipValidationConfiguration options)
     {
         // Only perform validation if enabled.
         if (!options.Enabled) return;
