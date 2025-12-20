@@ -3,6 +3,10 @@ namespace ByteGuard.FileValidator.Configuration
     /// <summary>
     /// Defines the scope of ZIP validation within the file validator.
     /// </summary>
+    /// <remarks>
+    /// <em>Internal for now as this is only used in preflight validation of ZIP-based file formats.
+    /// This enum allows for future expansion with a complete ZIP file validation procedure.</em>
+    /// </remarks>
     [Flags]
     internal enum ZipValidationScope
     {
@@ -42,6 +46,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// </summary>
         /// <remarks>
         /// Defines the scope of ZIP validation. Defaults to <see cref="ZipValidationScope.All"/>.
+        /// <para><em>Internal for now as this is only used in preflight validation of ZIP-based file formats.
+        /// This enum allows for future expansion with a complete ZIP file validation procedure.</em></para>
         /// </remarks>
         internal ZipValidationScope Scope { get; set; } = ZipValidationScope.All;
 
