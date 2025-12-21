@@ -441,7 +441,9 @@ public class FileValidatorTests
     }
 
     [Theory(DisplayName = "IsOpenDocumentFormat should return true for valid ODF files")]
-    [InlineData("test.odt")] // ODT
+    [InlineData("test.odp")]
+    [InlineData("test.ods")]
+    [InlineData("test.odt")]
     public void IsOpenDocumentFormat_ValidOpenDocumentFiles_ShouldReturnTrue(string fileName)
     {
         // Arrange
@@ -610,6 +612,8 @@ public class FileValidatorTests
     }
 
     [Theory(DisplayName = "IsValidOpenDocumentFormat(byte[]) should return true for valid ODF files")]
+    [InlineData("ODP_test.odp")]
+    [InlineData("ODS_test.ods")]
     [InlineData("ODT_test.odt")]
     public void IsValidOpenDocumentFormat_ValidOpenOpenDocumentFormatFiles_ShouldReturnTrue(string fileName)
     {

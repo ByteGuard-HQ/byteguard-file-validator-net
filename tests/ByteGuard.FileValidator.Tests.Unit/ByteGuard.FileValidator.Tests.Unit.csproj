@@ -24,6 +24,8 @@
     
     <ItemGroup>
         <EmbeddedResource Include="**\DOCX_test.docx" />
+        <EmbeddedResource Include="**\ODP_test.odp" />
+        <EmbeddedResource Include="**\ODS_test.ods" />
         <EmbeddedResource Include="**\ODT_test.odt" />
         <EmbeddedResource Include="**\PPTX_test.pptx" />
         <EmbeddedResource Include="**\XLSX_test.xlsx" />
@@ -47,5 +49,4 @@
     <ItemGroup>
       <Folder Include="TestHelpers/" />
     </ItemGroup>
-
 </Project>

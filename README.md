@@ -6,7 +6,7 @@ It helps you enforce consistent file upload rules by checking:
 - Allowed file extensions
 - File size limits
 - File signatures (magic numbers) to detect spoofed types
-- ZIP cotnaienr safety and specification conformance for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`)
+- ZIP container safety and specification conformance for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.odp`, `.ods`)
 - Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
 
 > ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
@@ -151,12 +151,12 @@ public async Task<IActionResult> Upload(IFormFile file)
 
 The following file types are supported by the `FileValidator`:
 
-| Category      | Supported extensions                                               |
-| ------------- | ------------------------------------------------------------------ |
-| **Documents** | `.doc`, `.docx`, `.xls`, `.xlsx`, `.pptx`, `.odt` , `.pdf`, `.rtf` |
-| **Images**    | `.jpg`, `.jpeg`, `.png,`, `.bmp`                                   |
-| **Video**     | `.mov`, `.avi`, `.mp4`                                             |
-| **Audio**     | `.m4a`, `.mp3`, `.wav`                                             |
+| Category      | Supported extensions                                                              |
+| ------------- | --------------------------------------------------------------------------------- |
+| **Documents** | `.doc`, `.docx`, `.xls`, `.xlsx`, `.pptx`, `.odp`, `.ods`, `.odt`, `.pdf`, `.rtf` |
+| **Images**    | `.jpg`, `.jpeg`, `.png,`, `.bmp`                                                  |
+| **Video**     | `.mov`, `.avi`, `.mp4`                                                            |
+| **Audio**     | `.m4a`, `.mp3`, `.wav`                                                            |
 
 ### Validation coverage per type
 
@@ -169,7 +169,7 @@ The following file types are supported by the `FileValidator`:
 
 For some formats, additional checks are performed:
 
-- **Microsoft Office / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.odt`):
+- **Microsoft Office / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.ods`, `.odp`, `.odt`):
 
   - Extension
   - File size
