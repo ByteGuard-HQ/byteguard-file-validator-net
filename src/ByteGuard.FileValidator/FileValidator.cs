@@ -85,6 +85,24 @@ namespace ByteGuard.FileValidator
             },
             new FileDefinition
             {
+                FileType = FileExtensions.Odp,
+                // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .odp.
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 } // PK␃␄
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ods,
+                // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .ods.
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 } // PK␃␄
+                }
+            },
+            new FileDefinition
+            {
                 FileType = FileExtensions.Odt,
                 // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .odt.
                 ValidSignatures = new List<byte[]>
@@ -232,6 +250,8 @@ namespace ByteGuard.FileValidator
         /// </summary>
         private static readonly List<string> OpenDocumentFormats = new List<string>
         {
+            FileExtensions.Odp,
+            FileExtensions.Ods,
             FileExtensions.Odt
         };
 
@@ -945,6 +965,16 @@ namespace ByteGuard.FileValidator
 
                 switch (extension.ToLowerInvariant())
                 {
+                    case FileExtensions.Odp:
+                        {
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentPresentationDocument(stream);
+                            break;
+                        }
+                    case FileExtensions.Ods:
+                        {
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentSpreadsheetDocument(stream);
+                            break;
+                        }
                     case FileExtensions.Odt:
                         {
                             isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(stream);

@@ -1,16 +1,16 @@
-
 # ByteGuard File Validator ![NuGet Version](https://img.shields.io/nuget/v/ByteGuard.FileValidator)
 
 **ByteGuard.FileValidator** is a lightweight security-focused library for validating user-supplied files in .NET applications.  
 It helps you enforce consistent file upload rules by checking:
--   Allowed file extensions
--   File size limits
--   File signatures (magic numbers) to detect spoofed types
--   Specification conformance for Office Open XML / Open Document Formats (`.docx`,  `.xlsx`,  `.pptx`,  `.odt`)
--   Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
+
+- Allowed file extensions
+- File size limits
+- File signatures (magic numbers) to detect spoofed types
+- Specification conformance for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`)
+- Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
 
 > ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
-It does **not** replace endpoint protection, sandboxing, input validation, or other security controls.
+> It does **not** replace endpoint protection, sandboxing, input validation, or other security controls.
 
 ## Features
 
@@ -27,15 +27,19 @@ It does **not** replace endpoint protection, sandboxing, input validation, or ot
 ## Getting Started
 
 ### Installation
+
 This package is published and installed via [NuGet](https://www.nuget.org/packages/ByteGuard.FileValidator).
 
 Reference the package in your project:
+
 ```bash
 dotnet add package ByteGuard.FileValidator
 ```
 
 ### Antimalware scanners
+
 In order to use the antimalware scanning capabilities, ensure you have a ByteGuard.FileValidator antimalware package referenced as well. Youo can find the relevant scanner package on NuGet under the namespace `ByteGuard.FileValidator.Scanners`.
+
 ## Usage
 
 ### Basic validation
@@ -76,13 +80,14 @@ var isValid = fileValidator.IsValidFile("example.pdf", fileStream);
 The `FileValidator` class provides methods to validate specific aspects of a file.
 
 > ⚠️ It’s recommended to use `IsValidFile` for comprehensive validation.
-> 
-> `IsValidFile`  performs, in order:
+>
+> `IsValidFile` performs, in order:
+>
 > 1.  Extension validation
 > 2.  File size validation
 > 3.  Signature (magic-number) validation
 > 4.  Optional Open XML / Open Document Format specification conformance validation (for supported types)
-> 5. Optional antimalware scanning with a compatible scanning package
+> 5.  Optional antimalware scanning with a compatible scanning package
 
 ```csharp
 bool isExtensionValid = fileValidator.IsValidFileType(fileName);
@@ -94,6 +99,7 @@ bool isMalwareClean = fileValidator.IsMalwareClean(fileName, fileStream);
 ```
 
 ### Example
+
 ```csharp
 [HttpPost("upload")]
 public async Task<IActionResult> Upload(IFormFile file)
@@ -117,13 +123,15 @@ public async Task<IActionResult> Upload(IFormFile file)
     }
 
     // Proceed with processing/saving...
-    
+
     return Ok();
 }
 ```
 
 ## Supported File Extensions
+
 The following file extensions are supported by the `FileValidator`:
+
 - `.jpeg`, `.jpg`
 - `.pdf`
 - `.png`
@@ -153,14 +161,15 @@ The following file extensions are supported by the `FileValidator`:
 
 For some formats, additional checks are performed:
 
-- **Office Open XML / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.odt`):  
+- **Microsoft Office / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`):
+
   - Extension
   - File size
   - Signature
   - Specification conformance
   - Malware scan result
 
-- **Other binary formats** (e.g. images, audio, video such as `.jpg`, `.png`, `.mp3`, `.mp4`):  
+- **Other binary formats** (e.g. images, audio, video such as `.jpg`, `.png`, `.mp3`, `.mp4`):
   - Extension
   - File size
   - Signature
@@ -170,25 +179,25 @@ For some formats, additional checks are performed:
 
 The `FileValidatorConfiguration` supports:
 
-| Setting | Required | Default | Description |
-|--|--|--|--|
-| `SupportedFileTypes` | Yes | N/A | A list of allowed file extensions (e.g., `.pdf`, `.jpg`).<br>Use the predefined constants in `FileExtensions` for supported types. |
-| `FileSizeLimit` | Yes | N/A | Maximum permitted size of files.<br>Use the static  `ByteSize` class provided with this package, to simplify your limit. |
-| `ThrowExceptionOnInvalidFile` | No | `true` | Whether to throw an exception on invalid files or return `false`. |
+| Setting                       | Required | Default | Description                                                                                                                        |
+| ----------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `SupportedFileTypes`          | Yes      | N/A     | A list of allowed file extensions (e.g., `.pdf`, `.jpg`).<br>Use the predefined constants in `FileExtensions` for supported types. |
+| `FileSizeLimit`               | Yes      | N/A     | Maximum permitted size of files.<br>Use the static `ByteSize` class provided with this package, to simplify your limit.            |
+| `ThrowExceptionOnInvalidFile` | No       | `true`  | Whether to throw an exception on invalid files or return `false`.                                                                  |
 
 ### Exceptions
 
 When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will throw one of the appropriate exceptions defined below. However, when `ThrowExceptionOnInvalidFile` is set to `false`, all validation functions will either return `true` or `false`.
 
-| Exception type | Scenario |
-|--|--|
-| `EmptyFileException` | Thrown when the file content is `null` or empty, indicating a file without any content. |
-| `UnsupportedFileException` | Thrown when the file extension is not in the list of supported types. |
-| `InvalidFileSizeException` | Thrown when the file size exceeds the configured file size limit. |
-| `InvalidSignatureException` | Thrown when the file's signature does not match the expected signature for its type. |
-| `InvalidOpenXmlFormatException` | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
+| Exception type                       | Scenario                                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `EmptyFileException`                 | Thrown when the file content is `null` or empty, indicating a file without any content.              |
+| `UnsupportedFileException`           | Thrown when the file extension is not in the list of supported types.                                |
+| `InvalidFileSizeException`           | Thrown when the file size exceeds the configured file size limit.                                    |
+| `InvalidSignatureException`          | Thrown when the file's signature does not match the expected signature for its type.                 |
+| `InvalidOpenXmlFormatException`      | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
 | `InvalidOpenDocumentFormatException` | Thrown when the specification conformance of an Open Document Format file is invalid (`.odt`, etc.). |
-| `MalwareDetectedException` | Thrown when the configured antimalware scanner detected malware in the file from a scan result. |
+| `MalwareDetectedException`           | Thrown when the configured antimalware scanner detected malware in the file from a scan result.      |
 
 ## When to use this package
 
@@ -197,4 +206,5 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 - ✅ When you want **defense-in-depth** against spoofed or malicious files
 
 ## License
+
 _ByteGuard FileValidator is Copyright © ByteGuard Contributors - Provided under the MIT license._

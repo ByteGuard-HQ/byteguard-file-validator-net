@@ -51,6 +51,16 @@
         public const string Odt = ".odt";
 
         /// <summary>
+        /// OpenDocument Spreadsheet.
+        /// </summary>
+        public const string Ods = ".ods";
+
+        /// <summary>
+        /// OpenDocument Presentation.
+        /// </summary>
+        public const string Odp = ".odp";
+
+        /// <summary>
         /// Rich Text Format.
         /// </summary>
         public const string Rtf = ".rtf";
