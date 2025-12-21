@@ -102,11 +102,11 @@ The `FileValidator` class provides methods to validate specific aspects of a fil
 >
 > `IsValidFile` performs, in order:
 >
-> 1.  Extension validation
-> 2.  File size validation
-> 3.  Signature (magic-number) validation
-> 4.  Optional Open XML / Open Document Format specification conformance validation (for supported types), including ZIP container safety
-> 5.  Optional antimalware scanning with a compatible scanning package
+> 1. Extension validation
+> 2. File size validation
+> 3. Signature (magic-number) validation
+> 4. Optional Open XML / Open Document Format specification conformance validation (for supported types), including ZIP container safety
+> 5. Optional antimalware scanning with a compatible scanning package
 
 ```csharp
 bool isExtensionValid = fileValidator.IsValidFileType(fileName);
