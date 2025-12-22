@@ -5,6 +5,7 @@
     <File Path="Directory.Version.props" />
     <File Path="LICENSE" />
     <File Path="README.md" />
+    <File Path="SECURITY.md" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ByteGuard.FileValidator.Tests.Unit/ByteGuard.FileValidator.Tests.Unit.csproj" />
