@@ -76,14 +76,14 @@ namespace ByteGuard.FileValidator.Validators
 
             // Only read the necessary bytes into a new byte[].
             var data = new byte[SignatureCheckLength];
-            _ = _stream.Read(data, 0, SignatureCheckLength);
+            var length = _stream.Read(data, 0, SignatureCheckLength);
 
             // Look for the valid signature.
-            var headerContent = Encoding.ASCII.GetString(data);
-            var index = headerContent.IndexOf(ValidSignatureString, StringComparison.Ordinal);
+            var headerContent = Encoding.ASCII.GetString(data, 0, length);
+            var isValid = headerContent.Contains(ValidSignatureString, StringComparison.Ordinal);
 
-            // If nout found (we didn't find %PDF- anywhere within the first 1024 bytes) this is not a valid PDF.
-            return index >= 0;
+            // If not found (we didn't find %PDF- anywhere within the first 1024 bytes) this is not a valid PDF.
+            return isValid;
         }
 
         public void Dispose()
