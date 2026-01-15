@@ -565,8 +565,8 @@ namespace ByteGuard.FileValidator
 #else
             _ = stream.Read(headerBytes, 0, signatureLength);
 #endif
-
-            var result = fileDefinition.ValidSignatures.Any(signature => headerBytes.SequenceEqual(signature));
+            var result = fileDefinition.ValidSignatures
+                .Any(signature => headerBytes.AsSpan(0, signature.Length).SequenceEqual(signature));
 
             // Might as well return early as the subtype check is irrelevant if the primary signature is invalid.
             if (!result)
