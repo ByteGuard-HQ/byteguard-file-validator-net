@@ -14,7 +14,7 @@ issue_templates:
     description: "Suggest updates or additions to the documentation."
     title: "[Docs]: "
     labels: ["documentation"]
-    body: "./ISSUE_TEMPLATE/documentation.tml"
+    body: "./ISSUE_TEMPLATE/documentation.yml"
   - name: "General Report"
     description: "Provide general feedback or inquiries."
     title: "[General]: "
