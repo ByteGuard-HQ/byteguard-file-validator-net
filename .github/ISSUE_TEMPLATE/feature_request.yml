@@ -21,7 +21,6 @@ body:
       description: Describe how this feature could be implemented.
     validations:
       required: false
-    render: markdown
   - type: textarea
     attributes:
       label: Additional context
