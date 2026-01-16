@@ -7,23 +7,23 @@ body:
     attributes:
       label: Documentation update
       description: What part of the documentation needs to be updated or added?
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Why is this needed?
       description: Explain the importance of this update.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Suggested changes
       description: Provide a detailed description of the changes.
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: Additional context
       description: Add any other context about the problem here.
-      validations:
-        required: false
+    validations:
+      required: false
