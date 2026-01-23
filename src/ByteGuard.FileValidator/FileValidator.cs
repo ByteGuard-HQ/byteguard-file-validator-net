@@ -1010,17 +1010,17 @@ namespace ByteGuard.FileValidator
                 {
                     case FileExtensions.Odp:
                         {
-                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentPresentationDocument(stream);
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentPresentationDocument(fileName, stream);
                             break;
                         }
                     case FileExtensions.Ods:
                         {
-                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentSpreadsheetDocument(stream);
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentSpreadsheetDocument(fileName, stream);
                             break;
                         }
                     case FileExtensions.Odt:
                         {
-                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(stream);
+                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(fileName, stream);
                             break;
                         }
                     default:
