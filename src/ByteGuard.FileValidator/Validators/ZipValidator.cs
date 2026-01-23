@@ -112,8 +112,8 @@ internal static class ZipValidator
 
         // Path traversal.
         var normalized = fullName.Replace('\\', '/');
-        if (normalized.Contains("../", StringComparison.Ordinal) ||
-            normalized.Contains("/..", StringComparison.Ordinal) ||
+        if (normalized.IndexOf("../", StringComparison.Ordinal) >= 0 ||
+            normalized.IndexOf("/..", StringComparison.Ordinal) >= 0 ||
             normalized.StartsWith("..", StringComparison.Ordinal))
             return true;
 
