@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net48;net8.0;net9.0;net10.0</TargetFrameworks>
         <Authors>ByteGuard Contributors, detilium</Authors>
         <Description>ByteGuard File Validator is a security-focused .NET library for validating user-supplied files, providing a configurable API to help you enforce safe and consistent file handling across your applications.</Description>
         <PackageProjectUrl>https://github.com/ByteGuard-HQ/byteguard-file-validator-net</PackageProjectUrl>
@@ -14,7 +14,8 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+      <Reference Include="WindowsBase" />
       <Reference Include="System.IO.Compression" />
     </ItemGroup>
     
