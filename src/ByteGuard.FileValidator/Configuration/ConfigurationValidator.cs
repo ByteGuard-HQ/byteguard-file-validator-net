@@ -62,27 +62,27 @@ namespace ByteGuard.FileValidator.Configuration
 
             if (zipConfig.Enabled)
             {
-                if (zipConfig.MaxEntries == 0 || zipConfig.MaxEntries < -1)
+                if (zipConfig.MaxEntries.HasValue && zipConfig.MaxEntries.Value <= 0)
                 {
-                    throw new ArgumentException("MaxEntries on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.", nameof(zipConfig.MaxEntries));
+                    throw new ArgumentException("MaxEntries on ZIP validation configuration is invalid. Either set a valid positive value or use 'null' for no limit.", nameof(zipConfig.MaxEntries));
                 }
 
-                if (zipConfig.TotalUncompressedSizeLimit == 0 || zipConfig.TotalUncompressedSizeLimit < -1)
+                if (zipConfig.TotalUncompressedSizeLimit.HasValue && zipConfig.TotalUncompressedSizeLimit.Value <= 0)
                 {
                     throw new ArgumentException(
-                        "TotalUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        "TotalUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use 'null' for no limit.",
                         nameof(zipConfig.TotalUncompressedSizeLimit));
                 }
 
-                if (zipConfig.EntryUncompressedSizeLimit == 0 || zipConfig.EntryUncompressedSizeLimit < -1)
+                if (zipConfig.EntryUncompressedSizeLimit.HasValue && zipConfig.EntryUncompressedSizeLimit.Value <= 0)
                 {
                     throw new ArgumentException(
-                        "EntryUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        "EntryUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use 'null' for no limit.",
                         nameof(zipConfig.EntryUncompressedSizeLimit));
                 }
 
                 // Ensure EntryUncompressedSizeLimit isn't greater than the TotalUncompressedSizeLimit if defined.
-                if (zipConfig.EntryUncompressedSizeLimit != -1 && zipConfig.TotalUncompressedSizeLimit != -1
+                if (zipConfig.EntryUncompressedSizeLimitEnabled && zipConfig.TotalUncompressedSizeLimitEnabled
                     && zipConfig.EntryUncompressedSizeLimit > zipConfig.TotalUncompressedSizeLimit)
                 {
                     throw new ArgumentException(
@@ -90,17 +90,18 @@ namespace ByteGuard.FileValidator.Configuration
                         nameof(zipConfig.EntryUncompressedSizeLimit));
                 }
 
-                if (double.IsNaN(zipConfig.CompressionRateLimit) || double.IsInfinity(zipConfig.CompressionRateLimit))
+                if (zipConfig.CompressionRateLimit.HasValue &&
+                    (double.IsNaN(zipConfig.CompressionRateLimit.Value) || double.IsInfinity(zipConfig.CompressionRateLimit.Value)))
                 {
                     throw new ArgumentException(
-                        "CompressionRateLimit must be a finite number. Either set a valid positive value or use '-1' for no limit.",
+                        "CompressionRateLimit must be a finite number. Either set a valid positive value or use 'null' for no limit.",
                         nameof(zipConfig.CompressionRateLimit));
                 }
 
-                if (zipConfig.CompressionRateLimit == 0 || zipConfig.CompressionRateLimit < -1)
+                if (zipConfig.CompressionRateLimit.HasValue && zipConfig.CompressionRateLimit.Value <= 0)
                 {
                     throw new ArgumentException(
-                        "CompressionRateLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
+                        "CompressionRateLimit on ZIP validation configuration is invalid. Either set a valid positive value or use 'null' for no limit.",
                         nameof(zipConfig.CompressionRateLimit));
                 }
             }

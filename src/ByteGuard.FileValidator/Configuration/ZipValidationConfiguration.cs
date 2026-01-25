@@ -1,4 +1,4 @@
-namespace ByteGuard.FileValidator.Configuration
+﻿namespace ByteGuard.FileValidator.Configuration
 {
     /// <summary>
     /// Defines the scope of ZIP validation within the file validator.
@@ -55,65 +55,65 @@ namespace ByteGuard.FileValidator.Configuration
         /// Max entries within a given ZIP-archive.
         /// </summary>
         /// <remarks>
-        /// Defaults to 10.000. Use <c>-1</c> for no limit.
+        /// Defaults to 10.000. Use <c>null</c> for no limit.
         /// </remarks>
-        public int MaxEntries { get; set; } = 10_000;
+        public int? MaxEntries { get; set; } = 10_000;
 
         /// <summary>
         /// Whether <see cref="MaxEntries"/> is enabled based on its value.
         /// </summary>
         /// <remarks>
-        /// Will return <c>false</c> if <see cref="MaxEntries"/> is set to <c>-1</c>.
+        /// Will return <c>false</c> if <see cref="MaxEntries"/> is set to <c>null</c>.
         /// </remarks>
-        internal bool MaxEntriesEnabled => MaxEntries > 0;
+        internal bool MaxEntriesEnabled => MaxEntries.HasValue;
 
         /// <summary>
         /// Max allowed total uncompressed size.
         /// </summary>
         /// <remarks>
-        /// Defaults to 512MB. Use <c>-1</c> for no limit.
+        /// Defaults to 512MB. Use <c>null</c> for no limit.
         /// </remarks>
-        public long TotalUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(512);
+        public long? TotalUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(512);
 
         /// <summary>
         /// Whether <see cref="TotalUncompressedSizeLimit"/> is enabled based on its value.
         /// </summary>
         /// <remarks>
-        /// Will return <c>false</c> if <see cref="TotalUncompressedSizeLimit"/> is set to <c>-1</c>.
+        /// Will return <c>false</c> if <see cref="TotalUncompressedSizeLimit"/> is set to <c>null</c>.
         /// </remarks>
-        internal bool TotalUncompressedSizeLimitEnabled => TotalUncompressedSizeLimit > 0;
+        internal bool TotalUncompressedSizeLimitEnabled => TotalUncompressedSizeLimit.HasValue;
 
         /// <summary>
         /// Max allowed uncompressed size for each entry within the ZIP-archive.
         /// </summary>
         /// <remarks>
-        /// Defaults to 128MB. Use <c>-1</c> for no limit.
+        /// Defaults to 128MB. Use <c>null</c> for no limit.
         /// </remarks>
-        public long EntryUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(128);
+        public long? EntryUncompressedSizeLimit { get; set; } = ByteSize.MegaBytes(128);
 
         /// <summary>
         /// Whether <see cref="EntryUncompressedSizeLimit"/> is enabled based on its value.
         /// </summary>
         /// <remarks>
-        /// Will return <c>false</c> if <see cref="EntryUncompressedSizeLimit"/> is set to <c>-1</c>.
+        /// Will return <c>false</c> if <see cref="EntryUncompressedSizeLimit"/> is set to <c>null</c>.
         /// </remarks>
-        internal bool EntryUncompressedSizeLimitEnabled => EntryUncompressedSizeLimit > 0;
+        internal bool EntryUncompressedSizeLimitEnabled => EntryUncompressedSizeLimit.HasValue;
 
         /// <summary>
         /// Max allowed compression rate.
         /// </summary>
         /// <remarks>
-        /// Defaults to 200:1. Use <c>-1</c> for no limit.
+        /// Defaults to 200:1. Use <c>null</c> for no limit.
         /// </remarks>
-        public double CompressionRateLimit { get; set; } = 200.0; // 200:1
+        public double? CompressionRateLimit { get; set; } = 200.0; // 200:1
 
         /// <summary>
         /// Whether <see cref="CompressionRateLimit"/> is enabled based on its value.
         /// </summary>
         /// <remarks>
-        /// Will return <c>false</c> if <see cref="CompressionRateLimit"/> is set to <c>-1</c>.
+        /// Will return <c>false</c> if <see cref="CompressionRateLimit"/> is set to <c>null</c>.
         /// </remarks>
-        internal bool CompressionRateLimitEnabled => CompressionRateLimit > 0;
+        internal bool CompressionRateLimitEnabled => CompressionRateLimit.HasValue;
 
         /// <summary>
         /// Whether to reject suspicious paths within the ZIP-archive.

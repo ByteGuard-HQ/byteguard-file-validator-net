@@ -1138,9 +1138,9 @@ public class FileValidatorTests
             {
                 RejectSuspiciousPaths = false,
 
-                MaxEntries = -1,
-                EntryUncompressedSizeLimit = -1,
-                CompressionRateLimit = -1,
+                MaxEntries = null,
+                EntryUncompressedSizeLimit = null,
+                CompressionRateLimit = null,
 
                 TotalUncompressedSizeLimit = 29 // Set limit below total size to trigger exception
             }
