@@ -1,4 +1,7 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
+using System.Text;
+using System.Xml;
+using ByteGuard.FileValidator.Configuration.Rules;
 
 namespace ByteGuard.FileValidator.Validators
 {
@@ -7,20 +10,29 @@ namespace ByteGuard.FileValidator.Validators
     /// </summary>
     /// <remarks>
     /// Common validation for Open Document Format (ODF) files such as .odt, .ods, .odp.
-    /// <para>
-    /// <em>For now the validation only checks for the presence of key files within the ODF ZIP archive structure.
-    /// This should definitely be improved in the future to validate the actual content of these files to ensure they conform to ODF specifications.</em>
-    /// </para>
     /// </remarks>
     internal static class OpenDocumentFormatValidator
     {
+        private const string ManifestEntryName = "META-INF/manifest.xml";
+        private const string ContentEntryName = "content.xml";
+        private const string MimetypeEntryName = "mimetype";
+
+        private static Dictionary<string, string> OdfMimetypeMappings = new(StringComparer.InvariantCultureIgnoreCase)
+        {
+            { ".odt", "application/vnd.oasis.opendocument.text" },
+            { ".ods", "application/vnd.oasis.opendocument.spreadsheet" },
+            { ".odp", "application/vnd.oasis.opendocument.presentation" },
+        };
+
         /// <summary>
-        /// Whether the given content stream is a valid ODF presentation (.odp) file.
+        /// Whether the given content stream is a valid ODF file.
         /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
         /// <param name="stream">Content stream.</param>
+        /// <param name="rules">ODF validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
         /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentPresentationDocument(Stream stream)
+        internal static bool IsValidOpenDocumentFormatFile(string fileName, Stream stream, OdfValidationRules rules)
         {
             if (stream == null || stream.Length == 0)
             {
@@ -29,12 +41,96 @@ namespace ByteGuard.FileValidator.Validators
 
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
             {
-                var mimetypeEntry = archive.GetEntry("mimetype");
-                var contentXmlEntry = archive.GetEntry("content.xml");
+                return PerformOdfValidation(fileName, archive, rules);
+            }
+        }
 
-                if (mimetypeEntry == null || contentXmlEntry == null)
+        /// <summary>
+        /// Perform ODF validation.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="archive">ODF ZIP archive.</param>
+        /// <param name="rules">ODF validation rules.</param>
+        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
+        private static bool PerformOdfValidation(string fileName, ZipArchive archive, OdfValidationRules rules)
+        {
+            var fileExtension = Path.GetExtension(fileName);
+            if (!OdfMimetypeMappings.ContainsKey(fileExtension))
+            {
+                // Unsupported ODF file extension
+                return false;
+            }
+
+            var manifest = archive.GetEntry(ManifestEntryName);
+            if (manifest is null)
+            {
+                // Must contain a manifest.xml entry
+                return false;
+            }
+
+            if (!archive.Entries.Any(e => e.FullName.Equals(ContentEntryName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                // Must contain a content.xml entry
+                return false;
+            }
+
+            // Validate mimetype entry
+            if (!IsValidMimetype(fileName, archive, rules))
+            {
+                return false;
+            }
+
+            // Validate manifest if present
+            if (!IsBasicValidManifest(manifest))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Whether the mimetype entry is valid.
+        /// </summary>
+        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
+        /// <param name="archive">ODF ZIP archive.</param>
+        /// <param name="rules">ODF validation rules.</param>
+        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
+        private static bool IsValidMimetype(string fileName, ZipArchive archive, OdfValidationRules rules)
+        {
+            var mimetypeEntry = archive.GetEntry(MimetypeEntryName);
+            if (mimetypeEntry is null)
+            {
+                if (rules.RequireMimetype)
                 {
+                    // Mimetype entry is required but missing
                     return false;
+                }
+            }
+            else
+            {
+                if (archive.Entries.Count > 0 && !string.Equals(archive.Entries[0].FullName, MimetypeEntryName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // The mimetype entry must be the first entry in the ZIP archive
+                    return false;
+                }
+
+                if (mimetypeEntry.Length != mimetypeEntry.CompressedLength)
+                {
+                    // The mimetype entry must not be compressed
+                    return false;
+                }
+
+                // Read and validate mimetype value
+                var mimetypeContent = Read(mimetypeEntry, 128);
+                if (mimetypeContent is not null)
+                {
+                    var expectedMimetype = OdfMimetypeMappings[Path.GetExtension(fileName)];
+                    var actual = mimetypeContent.Trim();
+                    if (!string.Equals(actual, expectedMimetype, StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -42,57 +138,96 @@ namespace ByteGuard.FileValidator.Validators
         }
 
         /// <summary>
-        /// Whether the given content stream is a valid ODF spreadsheet (.ods) file.
+        /// Whether the manifest entry is valid baased on basic checks.
         /// </summary>
-        /// <param name="stream">Content stream.</param>
+        /// <param name="manifestEntry">Manifest entry to validate.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentSpreadsheetDocument(Stream stream)
+        private static bool IsBasicValidManifest(ZipArchiveEntry manifestEntry)
         {
-            if (stream == null || stream.Length == 0)
+            try
             {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-            {
-                var mimetypeEntry = archive.GetEntry("mimetype");
-                var contentXmlEntry = archive.GetEntry("content.xml");
-
-                if (mimetypeEntry == null || contentXmlEntry == null)
+                using var manifestStream = manifestEntry.Open();
+                using var xmlReader = XmlReader.Create(manifestStream, new XmlReaderSettings
                 {
-                    return false;
-                }
-            }
+                    DtdProcessing = DtdProcessing.Prohibit,
+                    IgnoreComments = true,
+                    IgnoreProcessingInstructions = true,
+                    IgnoreWhitespace = true,
+                });
 
-            return true;
+                while (xmlReader.Read())
+                {
+                    if (xmlReader.NodeType != XmlNodeType.Element)
+                    {
+                        continue;
+                    }
+
+                    var fullPath = xmlReader.GetAttribute("full-path") ?? xmlReader.GetAttribute("manifest:full-path");
+                    if (string.IsNullOrEmpty(fullPath))
+                    {
+                        continue;
+                    }
+
+                    fullPath = fullPath.Replace('\\', '/');
+
+                    if (fullPath.StartsWith("/", StringComparison.Ordinal))
+                    {
+                        // OK: package root entry
+                        continue;
+                    }
+
+                    // Prevent aboslute paths, path traversal, and scheme/drive letters
+                    if (fullPath.StartsWith("../", StringComparison.Ordinal)
+                        || fullPath.IndexOf("..\\", StringComparison.Ordinal) >= 0
+                        || fullPath.IndexOf(":", StringComparison.Ordinal) >= 0)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                // Failed to parse manifest.xml
+                return false;
+            }
         }
 
         /// <summary>
-        /// Whether the given content stream is a valid ODF text (.odt) file.
+        /// Read the content of the given ZIP archive entry as UTF-8 string up to the specified maximum number of bytes.
         /// </summary>
-        /// <param name="stream">Content stream.</param>
-        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentTextDocument(Stream stream)
+        /// <param name="entry">ZIP archive entry to read.</param>
+        /// <param name="maxBytes">Maximum number of bytes to read.</param>
+        /// <returns>Content of the ZIP archive entry as UTF-8 string, or null if reading failed or exceeded maxBytes.</returns>
+        private static string? Read(ZipArchiveEntry entry, int maxBytes)
         {
-            if (stream == null || stream.Length == 0)
+            try
             {
-                throw new ArgumentNullException(nameof(stream));
-            }
+                using var entryStream = entry.Open();
+                using var memoryStream = new MemoryStream();
+                var buffer = new byte[4096];
 
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-            {
-                var mimetypeEntry = archive.GetEntry("mimetype");
-                var contentXmlEntry = archive.GetEntry("content.xml");
+                int read;
+                int total = 0;
 
-                if (mimetypeEntry == null || contentXmlEntry == null)
+                while ((read = entryStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    return false;
-                }
-            }
+                    total += read;
+                    if (total > maxBytes)
+                    {
+                        return null;
+                    }
 
-            return true;
+                    memoryStream.Write(buffer, 0, read);
+                }
+
+                return Encoding.ASCII.GetString(memoryStream.ToArray());
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

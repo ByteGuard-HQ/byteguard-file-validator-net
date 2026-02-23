@@ -6,7 +6,7 @@ It helps you enforce consistent file upload rules by checking:
 - Allowed file extensions
 - File size limits
 - File signatures (magic numbers) to detect spoofed types
-- ZIP container safety and specification conformance for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.odp`, `.ods`)
+- Security validation for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.odp`, `.ods`)
 - Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
 
 > ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
@@ -17,8 +17,7 @@ It helps you enforce consistent file upload rules by checking:
 - ✅ Validate files by **extension**
 - ✅ Validate files by **size**
 - ✅ Validate files by **signature (_magic-numbers_)**
-- ✅ Validate files by **specification conformance** for archive-based formats (_Open XML and Open Document Formats_)
-- ✅ Validate **ZIP container safety** for ZIP-based formats (_Open XML and Open Document Formats_) to protect against decompression bombs and suspicious paths
+- ✅ Validate **security aspects** for archive-based formats (_Open XML and Open Document Formats_)
 - ✅ **Ensure no malware** through a variety of antimalware scanners
 - ✅ Validate using file path, `Stream`, or `byte[]`
 - ✅ Configure which file types to support
@@ -50,16 +49,7 @@ var configuration = new FileValidatorConfiguration
 {
   SupportedFileTypes = [FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png],
   FileSizeLimit = ByteSize.MegaBytes(25),
-  ThrowExceptionOnInvalidFile = false,
-  ZipValidationConfiguration = new ZipValidationConfiguration
-  {
-    Enabled = true,
-    MaxEntries = 10_000,
-    TotalUncompressedSizeLimit = ByteSize.MegaBytes(512),
-    EntryUncompressedSizeLimit = ByteSize.MegaBytes(128),
-    CompresseionRateLimit = 200.0,
-    RejectSuspiciousPaths = true
-  }
+  ThrowExceptionOnInvalidFile = false
 };
 
 // Without antimalware scanner
@@ -79,15 +69,6 @@ var configuration = new FileValidatorConfigurationBuilder()
   .AllowFileTypes(FileExtensions.Pdf, FileExtensions.Jpg, FileExtensions.Png)
   .SetFileSizeLimit(ByteSize.MegaBytes(25))
   .SetThrowExceptionOnInvalidFile(false)
-  .ConfigureZipValidation(zipOptions =>
-  {
-    zipOptions.Enabled = true;
-    zipOptions.MaxEntries = 10_000;
-    zipOptions.TotalUncompressedSizeLimit = ByteSize.MegaBytes(512);
-    zipOptions.EntryUncompressedSizeLimit = ByteSize.MegaBytes(128);
-    zipOptions.CompressionRateLimit = 200.0;
-    zipOptions.RejectSuspiciousPaths = true;
-  })
   .Build();
 
 var fileValidator = new FileValidator(configuration);
@@ -105,7 +86,7 @@ The `FileValidator` class provides methods to validate specific aspects of a fil
 > 1. Extension validation
 > 2. File size validation
 > 3. Signature (magic-number) validation
-> 4. Optional Open XML / Open Document Format specification conformance validation (for supported types), including ZIP container safety
+> 4. Optional Open XML / Open Document Format security validation (for supported types)
 > 5. Optional antimalware scanning with a compatible scanning package
 
 ```csharp
@@ -170,12 +151,10 @@ The following file types are supported by the `FileValidator`:
 For some formats, additional checks are performed:
 
 - **Microsoft Office / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.ods`, `.odp`, `.odt`):
-
   - Extension
   - File size
   - Signature
-  - ZIP container safety
-  - Specification conformance
+  - Archive-based security validation
   - Malware scan result
 
 - **Other binary formats**:
@@ -188,23 +167,11 @@ For some formats, additional checks are performed:
 
 The `FileValidatorConfiguration` supports:
 
-| Setting                       | Required | Default     | Description                                                                                                                                 |
-| ----------------------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SupportedFileTypes`          | Yes      | N/A         | A list of allowed file extensions (e.g., `.pdf`, `.jpg`).<br>Use the predefined constants in `FileExtensions` for supported types.          |
-| `FileSizeLimit`               | Yes      | N/A         | Maximum permitted size of files.<br>Use the static `ByteSize` class provided with this package, to simplify your limit.                     |
-| `ThrowExceptionOnInvalidFile` | No       | `true`      | Whether to throw an exception on invalid files or return `false`.                                                                           |
-| `ZipValidationConfiguration`  | Yes      | _See below_ | Specific configuration class to configure how ZIP validation is performed on ZIP-based file formats (_Open XML and Open Document Formats_). |
-
-The nested `ZipValidationConfiguration` supports:
-
-| Setting                      | Required | Default       | Description                                                                                                                      |
-| ---------------------------- | -------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `Enabled`                    | Yes      | `true`        | Whether ZIP validation is enabled.                                                                                               |
-| `MaxEntries`                 | Yes      | `10000`       | The maximum allowed number of entries within the ZIP container.                                                                  |
-| `TotalUncompressedSizeLimit` | Yes      | 512 MB        | The total uncompressed size limit of the entire ZIP container.                                                                   |
-| `EntryUncompressedSizeLimit` | Yes      | 128 MB        | The maximum uncompressed size limit of individuel entries within the ZIP container.                                              |
-| `CompressionRateLimit`       | Yes      | `200` (200:1) | The maximum allowed compression rate (compressed size / uncompressed size).                                                      |
-| `RejectSuspiciousPaths`      | Yes      | `true`        | Whether files should be rejected if their full name contains suspicious paths (e.g. root paths, drive letters, path traversal.). |
+| Setting                       | Required | Default | Description                                                                                                                        |
+| ----------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `SupportedFileTypes`          | Yes      | N/A     | A list of allowed file extensions (e.g., `.pdf`, `.jpg`).<br>Use the predefined constants in `FileExtensions` for supported types. |
+| `FileSizeLimit`               | Yes      | N/A     | Maximum permitted size of files.<br>Use the static `ByteSize` class provided with this package, to simplify your limit.            |
+| `ThrowExceptionOnInvalidFile` | No       | `true`  | Whether to throw an exception on invalid files or return `false`.                                                                  |
 
 ### Exceptions
 
@@ -218,7 +185,6 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 | `InvalidSignatureException`          | Thrown when the file's signature does not match the expected signature for its type.                 |
 | `InvalidOpenXmlFormatException`      | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
 | `InvalidOpenDocumentFormatException` | Thrown when the specification conformance of an Open Document Format file is invalid (`.odt`, etc.). |
-| `InvalidZipArchiveException`         | Thrown when the ZIP-baesd file format does not respect the ZIP validation rules.                     |
 | `MalwareDetectedException`           | Thrown when the configured antimalware scanner detected malware in the file from a scan result.      |
 
 ## When to use this package
