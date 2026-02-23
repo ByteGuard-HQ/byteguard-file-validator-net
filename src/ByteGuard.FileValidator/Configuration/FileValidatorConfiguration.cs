@@ -1,4 +1,4 @@
-﻿using ByteGuard.FileValidator.Scanners;
+﻿using ByteGuard.FileValidator.Configuration.Rules;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -31,8 +31,19 @@ namespace ByteGuard.FileValidator.Configuration
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
 
         /// <summary>
-        /// ZIP validation configuration.
+        /// Specific file type validation rules.
         /// </summary>
-        public ZipValidationConfiguration ZipValidationConfiguration { get; set; } = new();
+        public FileTypeRules FileTypeRules { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Specific file type validation rules.
+    /// </summary>
+    public class FileTypeRules
+    {
+        /// <summary>
+        /// OpenDocument Format validation rules.
+        /// </summary>
+        public OdfValidationRules OdfRules { get; set; } = new();
     }
 }

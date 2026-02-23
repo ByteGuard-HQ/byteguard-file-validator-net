@@ -1,6 +1,7 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using System.Xml;
+using ByteGuard.FileValidator.Configuration.Rules;
 
 namespace ByteGuard.FileValidator.Validators
 {
@@ -9,16 +10,12 @@ namespace ByteGuard.FileValidator.Validators
     /// </summary>
     /// <remarks>
     /// Common validation for Open Document Format (ODF) files such as .odt, .ods, .odp.
-    /// <para>
-    /// <em>For now the validation only checks for the presence of key files within the ODF ZIP archive structure.
-    /// This should definitely be improved in the future to validate the actual content of these files to ensure they conform to ODF specifications.</em>
-    /// </para>
     /// </remarks>
     internal static class OpenDocumentFormatValidator
     {
         private const string ManifestEntryName = "META-INF/manifest.xml";
         private const string ContentEntryName = "content.xml";
-        private const string MimetypeEntryName = "mimetype.xml";
+        private const string MimetypeEntryName = "mimetype";
 
         private static Dictionary<string, string> OdfMimetypeMappings = new(StringComparer.InvariantCultureIgnoreCase)
         {
@@ -28,13 +25,14 @@ namespace ByteGuard.FileValidator.Validators
         };
 
         /// <summary>
-        /// Whether the given content stream is a valid ODF presentation (.odp) file.
+        /// Whether the given content stream is a valid ODF file.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
         /// <param name="stream">Content stream.</param>
+        /// <param name="rules">ODF validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
         /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentPresentationDocument(string fileName, Stream stream)
+        internal static bool IsValidOpenDocumentFormatFile(string fileName, Stream stream, OdfValidationRules rules)
         {
             if (stream == null || stream.Length == 0)
             {
@@ -43,57 +41,18 @@ namespace ByteGuard.FileValidator.Validators
 
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
             {
-                return IsOdfConformant(fileName, archive);
+                return PerformOdfValidation(fileName, archive, rules);
             }
         }
 
         /// <summary>
-        /// Whether the given content stream is a valid ODF spreadsheet (.ods) file.
-        /// </summary>
-        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
-        /// <param name="stream">Content stream.</param>
-        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentSpreadsheetDocument(string fileName, Stream stream)
-        {
-            if (stream == null || stream.Length == 0)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-            {
-                return IsOdfConformant(fileName, archive);
-            }
-        }
-
-        /// <summary>
-        /// Whether the given content stream is a valid ODF text (.odt) file.
-        /// </summary>
-        /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
-        /// <param name="stream">Content stream.</param>
-        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        /// <throws cref="ArgumentNullException">Thrown if the provided <paramref name="stream"/> is <c>null</c> or empty.</throws>
-        internal static bool IsValidOpenDocumentTextDocument(string fileName, Stream stream)
-        {
-            if (stream == null || stream.Length == 0)
-            {
-                throw new ArgumentNullException(nameof(stream));
-            }
-
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Read))
-            {
-                return IsOdfConformant(fileName, archive);
-            }
-        }
-
-        /// <summary>
-        /// Whether the given ZIP archive is a conformant ODF file.
+        /// Perform ODF validation.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
         /// <param name="archive">ODF ZIP archive.</param>
-        /// <returns><c>true</c> if conformant, <c>false</c> otherwise.</returns>
-        private static bool IsOdfConformant(string fileName, ZipArchive archive)
+        /// <param name="rules">ODF validation rules.</param>
+        /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
+        private static bool PerformOdfValidation(string fileName, ZipArchive archive, OdfValidationRules rules)
         {
             var fileExtension = Path.GetExtension(fileName);
             if (!OdfMimetypeMappings.ContainsKey(fileExtension))
@@ -116,7 +75,7 @@ namespace ByteGuard.FileValidator.Validators
             }
 
             // Validate mimetype entry
-            if (!IsValidMimetype(fileName, archive))
+            if (!IsValidMimetype(fileName, archive, rules))
             {
                 return false;
             }
@@ -135,14 +94,18 @@ namespace ByteGuard.FileValidator.Validators
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.odt</c>).</param>
         /// <param name="archive">ODF ZIP archive.</param>
+        /// <param name="rules">ODF validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
-        private static bool IsValidMimetype(string fileName, ZipArchive archive)
+        private static bool IsValidMimetype(string fileName, ZipArchive archive, OdfValidationRules rules)
         {
             var mimetypeEntry = archive.GetEntry(MimetypeEntryName);
             if (mimetypeEntry is null)
             {
-                // TODO: Create validation strictness setting
-                // return false;
+                if (rules.RequireMimetype)
+                {
+                    // Mimetype entry is required but missing
+                    return false;
+                }
             }
             else
             {
@@ -159,7 +122,7 @@ namespace ByteGuard.FileValidator.Validators
                 }
 
                 // Read and validate mimetype value
-                var mimetypeContent = Read(mimetypeEntry, 100);
+                var mimetypeContent = Read(mimetypeEntry, 128);
                 if (mimetypeContent is not null)
                 {
                     var expectedMimetype = OdfMimetypeMappings[Path.GetExtension(fileName)];
@@ -215,8 +178,8 @@ namespace ByteGuard.FileValidator.Validators
 
                     // Prevent aboslute paths, path traversal, and scheme/drive letters
                     if (fullPath.StartsWith("../", StringComparison.Ordinal)
-                        || fullPath.Contains("..\\", StringComparison.Ordinal)
-                        || fullPath.Contains(":", StringComparison.Ordinal))
+                        || fullPath.IndexOf("..\\", StringComparison.Ordinal) >= 0
+                        || fullPath.IndexOf(":", StringComparison.Ordinal) >= 0)
                     {
                         return false;
                     }
@@ -259,7 +222,7 @@ namespace ByteGuard.FileValidator.Validators
                     memoryStream.Write(buffer, 0, read);
                 }
 
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                return Encoding.ASCII.GetString(memoryStream.ToArray());
             }
             catch
             {

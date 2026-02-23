@@ -46,63 +46,20 @@ namespace ByteGuard.FileValidator.Configuration
                 throw new ArgumentException("File size limit must be greater than zero.", nameof(configuration.FileSizeLimit));
             }
 
-            ValidateZipValidationConfiguration(configuration);
+            ValidateOdfValidationConfiguration(configuration);
         }
 
         /// <summary>
-        /// Validate the ZIP validation options on the configuration object.
+        /// Validate the ODF validation options on the configuration object.
         /// </summary>
         /// <param name="configuration">File validator configuration object.</param>
-        private static void ValidateZipValidationConfiguration(FileValidatorConfiguration configuration)
+        private static void ValidateOdfValidationConfiguration(FileValidatorConfiguration configuration)
         {
-            var zipConfig = configuration.ZipValidationConfiguration
-                ?? throw new ArgumentNullException(
-                    nameof(configuration.ZipValidationConfiguration),
-                    $"{nameof(configuration.ZipValidationConfiguration)} cannot be null. Disable ZIP validation using 'Enabled' if unwanted.");
-
-            if (zipConfig.Enabled)
+            if (configuration.FileTypeRules.OdfRules == null)
             {
-                if (zipConfig.MaxEntries == 0 || zipConfig.MaxEntries < -1)
-                {
-                    throw new ArgumentException("MaxEntries on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.", nameof(zipConfig.MaxEntries));
-                }
-
-                if (zipConfig.TotalUncompressedSizeLimit == 0 || zipConfig.TotalUncompressedSizeLimit < -1)
-                {
-                    throw new ArgumentException(
-                        "TotalUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
-                        nameof(zipConfig.TotalUncompressedSizeLimit));
-                }
-
-                if (zipConfig.EntryUncompressedSizeLimit == 0 || zipConfig.EntryUncompressedSizeLimit < -1)
-                {
-                    throw new ArgumentException(
-                        "EntryUncompressedSizeLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
-                        nameof(zipConfig.EntryUncompressedSizeLimit));
-                }
-
-                // Ensure EntryUncompressedSizeLimit isn't greater than the TotalUncompressedSizeLimit if defined.
-                if (zipConfig.EntryUncompressedSizeLimit != -1 && zipConfig.TotalUncompressedSizeLimit != -1
-                    && zipConfig.EntryUncompressedSizeLimit > zipConfig.TotalUncompressedSizeLimit)
-                {
-                    throw new ArgumentException(
-                        "EntryUncompressedSizeLimit cannot exceed TotalUncompressedSizeLimit.",
-                        nameof(zipConfig.EntryUncompressedSizeLimit));
-                }
-
-                if (double.IsNaN(zipConfig.CompressionRateLimit) || double.IsInfinity(zipConfig.CompressionRateLimit))
-                {
-                    throw new ArgumentException(
-                        "CompressionRateLimit must be a finite number. Either set a valid positive value or use '-1' for no limit.",
-                        nameof(zipConfig.CompressionRateLimit));
-                }
-
-                if (zipConfig.CompressionRateLimit == 0 || zipConfig.CompressionRateLimit < -1)
-                {
-                    throw new ArgumentException(
-                        "CompressionRateLimit on ZIP validation configuration is invalid. Either set a valid positive value or use '-1' for no limit.",
-                        nameof(zipConfig.CompressionRateLimit));
-                }
+                throw new ArgumentNullException(
+                    nameof(configuration.FileTypeRules.OdfRules),
+                    $"{nameof(configuration.FileTypeRules.OdfRules)} cannot be null.");
             }
         }
     }

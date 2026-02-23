@@ -1,4 +1,6 @@
-﻿namespace ByteGuard.FileValidator.Configuration
+﻿using ByteGuard.FileValidator.Configuration.Rules;
+
+namespace ByteGuard.FileValidator.Configuration
 {
     /// <summary>
     /// File validator configurations fluent API builder.
@@ -8,7 +10,7 @@
         private readonly List<string> supportedFileTypes = new List<string>();
         private bool throwOnInvalidFiles = true;
         private long fileSizeLimit = ByteSize.MegaBytes(25);
-        private ZipValidationConfiguration zipConfig = new();
+        private OdfValidationRules odfValidationRules = new();
 
         /// <summary>
         /// Allow specific file types (extensions) to be validated.
@@ -43,20 +45,14 @@
         }
 
         /// <summary>
-        /// Configure the ZIP validation options.
+        /// Configure the OpenDocument Format validation rules.
         /// </summary>
         /// <param name="configure">Configuration action.</param>
-        public FileValidatorConfigurationBuilder ConfigureZipValidation(Action<ZipValidationConfiguration> configure)
+        public FileValidatorConfigurationBuilder ConfigureOdfValidationRules(Action<OdfValidationRules> configure)
         {
-            configure?.Invoke(zipConfig);
+            configure?.Invoke(odfValidationRules);
             return this;
         }
-
-        /// <summary>
-        /// Disable ZIP validation.
-        /// </summary>
-        public FileValidatorConfigurationBuilder DisableZipValidation()
-            => ConfigureZipValidation(options => options.Enabled = false);
 
         /// <summary>
         /// Build configuration.
@@ -68,18 +64,10 @@
             {
                 SupportedFileTypes = supportedFileTypes,
                 ThrowExceptionOnInvalidFile = throwOnInvalidFiles,
-                FileSizeLimit = fileSizeLimit,
-                ZipValidationConfiguration = new()
-                {
-                    Enabled = zipConfig.Enabled,
-                    Scope = zipConfig.Scope,
-                    MaxEntries = zipConfig.MaxEntries,
-                    TotalUncompressedSizeLimit = zipConfig.TotalUncompressedSizeLimit,
-                    EntryUncompressedSizeLimit = zipConfig.EntryUncompressedSizeLimit,
-                    CompressionRateLimit = zipConfig.CompressionRateLimit,
-                    RejectSuspiciousPaths = zipConfig.RejectSuspiciousPaths
-                }
+                FileSizeLimit = fileSizeLimit
             };
+
+            configuration.FileTypeRules.OdfRules = odfValidationRules;
 
             ConfigurationValidator.ThrowIfInvalid(configuration);
 
