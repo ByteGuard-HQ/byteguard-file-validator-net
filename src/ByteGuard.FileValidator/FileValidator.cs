@@ -801,17 +801,17 @@ namespace ByteGuard.FileValidator
                 {
                     case FileExtensions.Docx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidWordDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidWordDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     case FileExtensions.Xlsx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     case FileExtensions.Pptx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidPresentationDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidPresentationDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     default:
@@ -857,15 +857,6 @@ namespace ByteGuard.FileValidator
             catch (InvalidOpenXmlFormatException)
             {
                 // Exceptions throw from within the Open XML format validator.
-                if (_configuration.ThrowExceptionOnInvalidFile)
-                {
-                    throw;
-                }
-
-                return false;
-            }
-            catch (InvalidZipArchiveException)
-            {
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw;
@@ -994,15 +985,6 @@ namespace ByteGuard.FileValidator
                 if (_configuration.ThrowExceptionOnInvalidFile)
                 {
                     throw new InvalidOpenDocumentFormatException("The provided file is not a valid Open Document Format file. See inner exception for details.", e);
-                }
-
-                return false;
-            }
-            catch (InvalidZipArchiveException)
-            {
-                if (_configuration.ThrowExceptionOnInvalidFile)
-                {
-                    throw;
                 }
 
                 return false;
