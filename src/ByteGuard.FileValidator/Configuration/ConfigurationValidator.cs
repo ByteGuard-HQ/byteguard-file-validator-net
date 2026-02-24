@@ -1,4 +1,5 @@
 ﻿using ByteGuard.FileValidator.Exceptions;
+using DocumentFormat.OpenXml;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -46,20 +47,42 @@ namespace ByteGuard.FileValidator.Configuration
                 throw new ArgumentException("File size limit must be greater than zero.", nameof(configuration.FileSizeLimit));
             }
 
-            ValidateOdfValidationConfiguration(configuration);
+            ValidateOdfRules(configuration);
+            ValidateOpenXmlRules(configuration);
         }
 
         /// <summary>
-        /// Validate the ODF validation options on the configuration object.
+        /// Validate the ODF rules on the configuration object.
         /// </summary>
         /// <param name="configuration">File validator configuration object.</param>
-        private static void ValidateOdfValidationConfiguration(FileValidatorConfiguration configuration)
+        private static void ValidateOdfRules(FileValidatorConfiguration configuration)
         {
             if (configuration.FileTypeRules.OdfRules == null)
             {
                 throw new ArgumentNullException(
                     nameof(configuration.FileTypeRules.OdfRules),
                     $"{nameof(configuration.FileTypeRules.OdfRules)} cannot be null.");
+            }
+        }
+
+        /// <summary>
+        /// Validate the Open XML rules on the configuration object.
+        /// </summary>
+        /// <param name="configuration">File validator configuration object.</param>
+        private static void ValidateOpenXmlRules(FileValidatorConfiguration configuration)
+        {
+            if (configuration.FileTypeRules.OpenXmlRules == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(configuration.FileTypeRules.OpenXmlRules),
+                    $"{nameof(configuration.FileTypeRules.OpenXmlRules)} cannot be null.");
+            }
+
+            if (configuration.FileTypeRules.OpenXmlRules.ConformanceVersion == FileFormatVersions.None)
+            {
+                throw new ArgumentException(
+                    $"{nameof(configuration.FileTypeRules.OpenXmlRules.ConformanceVersion)} cannot be 'None'.",
+                    nameof(configuration.FileTypeRules.OpenXmlRules.ConformanceVersion));
             }
         }
     }

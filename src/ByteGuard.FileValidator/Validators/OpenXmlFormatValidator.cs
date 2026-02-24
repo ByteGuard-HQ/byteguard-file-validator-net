@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml;
+﻿using ByteGuard.FileValidator.Configuration.Rules;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using ByteGuard.FileValidator.Exceptions;
@@ -17,10 +18,11 @@ namespace ByteGuard.FileValidator.Validators
         /// Whether the given content stream is a valid Word document.
         /// </summary>
         /// <param name="stream">Stream in question.</param>
+        /// <param name="rules">Open XML specific validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the provided stream is null.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, templates).</exception>
-        internal static bool IsValidWordDocument(Stream stream)
+        internal static bool IsValidWordDocument(Stream stream, OpenXmlRules rules)
         {
             if (stream == null || stream.Length == 0)
             {
@@ -42,11 +44,25 @@ namespace ByteGuard.FileValidator.Validators
                     throw new InvalidOpenXmlFormatException("Document is a template.");
                 }
 
-                // Validate structure.
-                var validator = new OpenXmlValidator();
-                if (validator.Validate(wordDocument).Any())
+                // Base structure validation
+                if (wordDocument.MainDocumentPart == null)
                 {
-                    return false;
+                    throw new InvalidOpenXmlFormatException("Unable to retrieve main document part in document.");
+                }
+                
+                if (wordDocument.MainDocumentPart.Document == null)
+                {
+                    throw new InvalidOpenXmlFormatException("Document does not adhere to required format.");
+                }
+
+                // Validate specification conformance.
+                if (rules.PerformConformanceValidation)
+                {
+                    var validator = new OpenXmlValidator(rules.ConformanceVersion);
+                    if (validator.Validate(wordDocument).Any())
+                    {
+                        return false;
+                    }   
                 }
             }
 
@@ -57,10 +73,11 @@ namespace ByteGuard.FileValidator.Validators
         /// Whether the given content stream is a valid spreadsheet (Excel).
         /// </summary>
         /// <param name="stream">Stream in question.</param>
+        /// <param name="rules">Open XML specific validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the provided stream is null.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, add-ins, templates).</exception>
-        internal static bool IsValidSpreadsheetDocument(Stream stream)
+        internal static bool IsValidSpreadsheetDocument(Stream stream, OpenXmlRules rules)
         {
             if (stream == null || stream.Length == 0)
             {
@@ -88,11 +105,30 @@ namespace ByteGuard.FileValidator.Validators
                     throw new InvalidOpenXmlFormatException("Spreadsheet is a template.");
                 }
 
-                // Validate structure.
-                var validator = new OpenXmlValidator();
-                if (validator.Validate(spreadsheetDocument).Any())
+                // Base structure validation
+                if (spreadsheetDocument.WorkbookPart == null)
                 {
-                    return false;
+                    throw new InvalidOpenXmlFormatException("Unable to retrieve workbook part in spreadsheet.");
+                }
+                
+                if (spreadsheetDocument.WorkbookPart.Workbook == null)
+                {
+                    throw new InvalidOpenXmlFormatException("Spreadsheet does not adhere to required format.");
+                }
+
+                if (!spreadsheetDocument.WorkbookPart.WorksheetParts.Any())
+                {
+                    throw new InvalidOpenXmlFormatException("Spreadsheet does not contain any worksheets.");
+                }
+
+                // Validate specification conformance.
+                if (rules.PerformConformanceValidation)
+                {
+                    var validator = new OpenXmlValidator(rules.ConformanceVersion);
+                    if (validator.Validate(spreadsheetDocument).Any())
+                    {
+                        return false;
+                    }   
                 }
             }
 
@@ -103,10 +139,11 @@ namespace ByteGuard.FileValidator.Validators
         /// Whether the given content stream is a valid presentation (PowerPoint).
         /// </summary>
         /// <param name="stream">Stream in question.</param>
+        /// <param name="rules">Open XML specific validation rules.</param>
         /// <returns><c>true</c> if valid, <c>false</c> otherwise.</returns>
         /// <exception cref="ArgumentNullException">Thrown if the provided stream is null.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if document type is not supported (macros, add-ins, templates).</exception>
-        internal static bool IsValidPresentationDocument(Stream stream)
+        internal static bool IsValidPresentationDocument(Stream stream, OpenXmlRules rules)
         {
             if (stream == null || stream.Length == 0)
             {
@@ -135,11 +172,25 @@ namespace ByteGuard.FileValidator.Validators
                     throw new InvalidOpenXmlFormatException("Presentation is a template.");
                 }
 
-                // Validate structure.
-                var validator = new OpenXmlValidator();
-                if (validator.Validate(presentationDocument).Any())
+                // Base structure validation
+                if (presentationDocument.PresentationPart == null)
                 {
-                    return false;
+                    throw new InvalidOpenXmlFormatException("Unable to retrieve presentation part in presentation.");
+                }
+
+                if (!presentationDocument.PresentationPart.SlideParts.Any())
+                {
+                    throw new InvalidOpenXmlFormatException("Presentation does not contain any slides.");
+                }
+
+                // Validate specification conformance.
+                if (rules.PerformConformanceValidation)
+                {
+                    var validator = new OpenXmlValidator(rules.ConformanceVersion);
+                    if (validator.Validate(presentationDocument).Any())
+                    {
+                        return false;
+                    }   
                 }
             }
 
