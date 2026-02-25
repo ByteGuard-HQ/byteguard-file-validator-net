@@ -303,6 +303,7 @@ namespace ByteGuard.FileValidator
 
         /// <summary>
         /// Whether the given file is valid based on all parameters.
+        /// Whether the given file is valid based on all parameters.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
         /// <param name="stream">Stream content of the file.</param>
