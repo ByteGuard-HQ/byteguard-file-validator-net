@@ -44,7 +44,7 @@ namespace ByteGuard.FileValidator.Configuration
         /// <summary>
         /// OpenDocument Format validation rules.
         /// </summary>
-        public OdfValidationRules OdfRules { get; set; } = new();
+        public OdfRules OdfRules { get; set; } = new();
 
         /// <summary>
         /// Open XML validation rules.

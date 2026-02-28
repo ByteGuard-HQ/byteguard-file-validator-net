@@ -3,7 +3,7 @@
 /// <summary>
 /// Validation rules for OpenDocument Format files.
 /// </summary>
-public class OdfValidationRules
+public class OdfRules
 {
     /// <summary>
     /// Whether a valid mimetype file is required in the ODF package. Defaults to <c>true</c>.
