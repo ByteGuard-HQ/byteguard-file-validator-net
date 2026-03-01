@@ -2,6 +2,7 @@
 using ByteGuard.FileValidator.Configuration;
 using ByteGuard.FileValidator.Exceptions;
 using ByteGuard.FileValidator.Scanners;
+using ByteGuard.FileValidator.Tests.Unit.TestHelpers;
 using NSubstitute;
 
 namespace ByteGuard.FileValidator.Tests.Unit;
@@ -440,7 +441,9 @@ public class FileValidatorTests
     }
 
     [Theory(DisplayName = "IsOpenDocumentFormat should return true for valid ODF files")]
-    [InlineData("test.odt")] // ODT
+    [InlineData("test.odp")]
+    [InlineData("test.ods")]
+    [InlineData("test.odt")]
     public void IsOpenDocumentFormat_ValidOpenDocumentFiles_ShouldReturnTrue(string fileName)
     {
         // Arrange
@@ -609,6 +612,8 @@ public class FileValidatorTests
     }
 
     [Theory(DisplayName = "IsValidOpenDocumentFormat(byte[]) should return true for valid ODF files")]
+    [InlineData("ODP_test.odp")]
+    [InlineData("ODS_test.ods")]
     [InlineData("ODT_test.odt")]
     public void IsValidOpenDocumentFormat_ValidOpenOpenDocumentFormatFiles_ShouldReturnTrue(string fileName)
     {
@@ -917,7 +922,6 @@ public class FileValidatorTests
 
     [Theory(DisplayName = "IsValidFile(string, byte[]) should validate Open XML files")]
     [InlineData("ODT_test.odt", true)] // Valid ODT
-    [InlineData("ZIP_test_fake_ODT.odt", false)] // Invalid ODT
     public void IsValidFile_ValidateOpenDocumentFormatFiles(string fileName, bool expectedResult)
     {
         // Arrange

@@ -1,9 +1,10 @@
 ﻿using ByteGuard.FileValidator.Exceptions;
+using DocumentFormat.OpenXml;
 
 namespace ByteGuard.FileValidator.Configuration
 {
     /// <summary>
-    /// Class used to validate the given configuration.
+    /// Class used to validate a given file validator configuration instance.
     /// </summary>
     public static class ConfigurationValidator
     {
@@ -11,8 +12,8 @@ namespace ByteGuard.FileValidator.Configuration
         /// Validate configuration and throw exceptions if invalid.
         /// </summary>
         /// <param name="configuration">Configuration instance to validate.</param>
-        /// <exception cref="ArgumentNullException">Throw if the configuration instance is null.</exception>
-        /// <exception cref="ArgumentException">Thrown is no supported file types have been set, there's an error with any of the provided file types (missing "." prefix), or the file size limit is less than or equal to 0.</exception>
+        /// <exception cref="ArgumentNullException">Throw if any required objects on the configuration object is <c>null</c>, or if the configuration object itself is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if any of the configuration values are invalid.</exception>
         /// <exception cref="UnsupportedFileException">Thrown if any of the provided supported file types are unsupported by the file validator.</exception>
         public static void ThrowIfInvalid(FileValidatorConfiguration configuration)
         {
@@ -44,6 +45,44 @@ namespace ByteGuard.FileValidator.Configuration
             if (configuration.FileSizeLimit <= 0)
             {
                 throw new ArgumentException("File size limit must be greater than zero.", nameof(configuration.FileSizeLimit));
+            }
+
+            ValidateOdfRules(configuration);
+            ValidateOpenXmlRules(configuration);
+        }
+
+        /// <summary>
+        /// Validate the ODF rules on the configuration object.
+        /// </summary>
+        /// <param name="configuration">File validator configuration object.</param>
+        private static void ValidateOdfRules(FileValidatorConfiguration configuration)
+        {
+            if (configuration.FileTypeRules.OdfRules == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(configuration.FileTypeRules.OdfRules),
+                    $"{nameof(configuration.FileTypeRules.OdfRules)} cannot be null.");
+            }
+        }
+
+        /// <summary>
+        /// Validate the Open XML rules on the configuration object.
+        /// </summary>
+        /// <param name="configuration">File validator configuration object.</param>
+        private static void ValidateOpenXmlRules(FileValidatorConfiguration configuration)
+        {
+            if (configuration.FileTypeRules.OpenXmlRules == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(configuration.FileTypeRules.OpenXmlRules),
+                    $"{nameof(configuration.FileTypeRules.OpenXmlRules)} cannot be null.");
+            }
+
+            if (configuration.FileTypeRules.OpenXmlRules.ConformanceVersion == FileFormatVersions.None)
+            {
+                throw new ArgumentException(
+                    $"{nameof(configuration.FileTypeRules.OpenXmlRules.ConformanceVersion)} cannot be 'None'.",
+                    nameof(configuration.FileTypeRules.OpenXmlRules.ConformanceVersion));
             }
         }
     }

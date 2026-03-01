@@ -1,4 +1,4 @@
-﻿using ByteGuard.FileValidator.Scanners;
+﻿using ByteGuard.FileValidator.Configuration.Rules;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -29,5 +29,26 @@ namespace ByteGuard.FileValidator.Configuration
         /// Whether to throw an exception if an unsupported/invalid file is encountered. Defaults to <c>true</c>.
         /// </summary>
         public bool ThrowExceptionOnInvalidFile { get; set; } = true;
+
+        /// <summary>
+        /// Specific file type validation rules.
+        /// </summary>
+        public FileTypeRules FileTypeRules { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Specific file type validation rules.
+    /// </summary>
+    public class FileTypeRules
+    {
+        /// <summary>
+        /// OpenDocument Format validation rules.
+        /// </summary>
+        public OdfRules OdfRules { get; set; } = new();
+
+        /// <summary>
+        /// Open XML validation rules.
+        /// </summary>
+        public OpenXmlRules OpenXmlRules { get; set; } = new();
     }
 }

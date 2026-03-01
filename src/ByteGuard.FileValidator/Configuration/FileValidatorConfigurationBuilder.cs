@@ -1,4 +1,4 @@
-﻿using ByteGuard.FileValidator.Scanners;
+﻿using ByteGuard.FileValidator.Configuration.Rules;
 
 namespace ByteGuard.FileValidator.Configuration
 {
@@ -10,6 +10,9 @@ namespace ByteGuard.FileValidator.Configuration
         private readonly List<string> supportedFileTypes = new List<string>();
         private bool throwOnInvalidFiles = true;
         private long fileSizeLimit = ByteSize.MegaBytes(25);
+
+        private OdfRules odfValidationRules = new();
+        private OpenXmlRules openXmlRules = new();
 
         /// <summary>
         /// Allow specific file types (extensions) to be validated.
@@ -44,6 +47,26 @@ namespace ByteGuard.FileValidator.Configuration
         }
 
         /// <summary>
+        /// Configure the OpenDocument Format validation rules.
+        /// </summary>
+        /// <param name="configure">Configuration action.</param>
+        public FileValidatorConfigurationBuilder ConfigureOdfValidationRules(Action<OdfRules> configure)
+        {
+            configure.Invoke(odfValidationRules);
+            return this;
+        }
+
+        /// <summary>
+        /// Configure the Open XML validation rules.
+        /// </summary>
+        /// <param name="configure">Configuration action.</param>
+        public FileValidatorConfigurationBuilder ConfigureOpenXmlValidationRules(Action<OpenXmlRules> configure)
+        {
+            configure.Invoke(openXmlRules);
+            return this;
+        }
+
+        /// <summary>
         /// Build configuration.
         /// </summary>
         /// <returns>File validator configurations object.</returns>
@@ -55,6 +78,9 @@ namespace ByteGuard.FileValidator.Configuration
                 ThrowExceptionOnInvalidFile = throwOnInvalidFiles,
                 FileSizeLimit = fileSizeLimit
             };
+
+            configuration.FileTypeRules.OdfRules = odfValidationRules;
+            configuration.FileTypeRules.OpenXmlRules = openXmlRules;
 
             ConfigurationValidator.ThrowIfInvalid(configuration);
 

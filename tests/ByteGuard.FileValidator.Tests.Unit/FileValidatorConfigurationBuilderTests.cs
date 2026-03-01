@@ -1,4 +1,5 @@
 ﻿using ByteGuard.FileValidator.Configuration;
+using DocumentFormat.OpenXml;
 
 namespace ByteGuard.FileValidator.Tests.Unit;
 
@@ -48,5 +49,46 @@ public class FileValidatorConfigurationBuilderTests
 
         // Act & Assert
         Assert.ThrowsAny<Exception>(act);
+    }
+    
+    [Fact(DisplayName = "ConfigureOdfValidationRules sets the correct values on the configuration object")]
+    public void ConfigureOdfValidationRules_SetsCorrectValues()
+    {
+        // Arrange
+        var builder = new FileValidatorConfigurationBuilder()
+            .AllowFileTypes(".odt");
+        
+        // Act
+        builder.ConfigureOdfValidationRules(config =>
+        {
+            config.RequireMimetype = false;
+        });
+
+        var config = builder.Build();
+        
+        // Assert
+        Assert.False(config.FileTypeRules.OdfRules.RequireMimetype);
+    }
+    
+    [Fact(DisplayName = "ConfigureOpenXmlValidationRules sets the correct values on the configuration object")]
+    public void ConfigureOpenXmlValidationRules_SetsCorrectValues()
+    {
+        // Arrange
+        var expectedConformanceVersion = FileFormatVersions.Office2016;
+        var builder = new FileValidatorConfigurationBuilder()
+            .AllowFileTypes(".docx");
+        
+        // Act
+        builder.ConfigureOpenXmlValidationRules(config =>
+        {
+            config.PerformConformanceValidation = true;
+            config.ConformanceVersion = expectedConformanceVersion;
+        });
+
+        var config = builder.Build();
+        
+        // Assert
+        Assert.True(config.FileTypeRules.OdfRules.RequireMimetype);
+        Assert.Equal(expectedConformanceVersion, config.FileTypeRules.OpenXmlRules.ConformanceVersion);
     }
 }

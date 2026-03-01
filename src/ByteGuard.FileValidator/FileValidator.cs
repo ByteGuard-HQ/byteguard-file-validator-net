@@ -85,6 +85,24 @@ namespace ByteGuard.FileValidator
             },
             new FileDefinition
             {
+                FileType = FileExtensions.Odp,
+                // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .odp.
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 } // PK␃␄
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ods,
+                // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .ods.
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x50, 0x4B, 0x03, 0x04 } // PK␃␄
+                }
+            },
+            new FileDefinition
+            {
                 FileType = FileExtensions.Odt,
                 // WARNING: This shares the same signature as .zip and could potentially allow for .zip disguised as .odt.
                 ValidSignatures = new List<byte[]>
@@ -232,6 +250,8 @@ namespace ByteGuard.FileValidator
         /// </summary>
         private static readonly List<string> OpenDocumentFormats = new List<string>
         {
+            FileExtensions.Odp,
+            FileExtensions.Ods,
             FileExtensions.Odt
         };
 
@@ -283,6 +303,7 @@ namespace ByteGuard.FileValidator
 
         /// <summary>
         /// Whether the given file is valid based on all parameters.
+        /// Whether the given file is valid based on all parameters.
         /// </summary>
         /// <param name="fileName">File name including extension (e.g. <c>my-file.jpg</c>).</param>
         /// <param name="stream">Stream content of the file.</param>
@@ -290,6 +311,8 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string fileName, Stream stream)
         {
             // Validate file type.
@@ -374,6 +397,8 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string fileName, byte[] content)
         {
             using (var stream = new MemoryStream(content))
@@ -391,6 +416,8 @@ namespace ByteGuard.FileValidator
         /// <exception cref="UnsupportedFileException">Thrown if the file type is not supported and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidSignatureException">Thrown if the file does not adhere to the expected file signature and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         /// <exception cref="InvalidOpenXmlFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected Open XML structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="InvalidOpenDocumentFormatException">Thrown if the internal ZIP-archive structure does not adhere to the expected ODF structure of the given file type and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
+        /// <exception cref="MalwareDetectedException">Thrown if antimalware scanner is enabled, malware has been detected in the file and <see cref="FileValidatorConfiguration.ThrowExceptionOnInvalidFile"/> is enabled.</exception>
         public bool IsValidFile(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -768,22 +795,24 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
+                stream.Seek(0, SeekOrigin.Begin);
+
                 bool isValid;
                 switch (extension.ToLowerInvariant())
                 {
                     case FileExtensions.Docx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidWordDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidWordDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     case FileExtensions.Xlsx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidSpreadsheetDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     case FileExtensions.Pptx:
                         {
-                            isValid = OpenXmlFormatValidator.IsValidPresentationDocument(stream);
+                            isValid = OpenXmlFormatValidator.IsValidPresentationDocument(stream, _configuration.FileTypeRules.OpenXmlRules);
                             break;
                         }
                     default:
@@ -941,18 +970,9 @@ namespace ByteGuard.FileValidator
                     return false;
                 }
 
-                bool isValid;
+                stream.Seek(0, SeekOrigin.Begin);
 
-                switch (extension.ToLowerInvariant())
-                {
-                    case FileExtensions.Odt:
-                        {
-                            isValid = OpenDocumentFormatValidator.IsValidOpenDocumentTextDocument(stream);
-                            break;
-                        }
-                    default:
-                        throw new InvalidOpenDocumentFormatException("The provided file extension is not recognized as an Open Document Format file.");
-                }
+                var isValid = OpenDocumentFormatValidator.IsValidOpenDocumentFormatFile(fileName, stream, _configuration.FileTypeRules.OdfRules);
 
                 if (_configuration.ThrowExceptionOnInvalidFile && !isValid)
                 {
