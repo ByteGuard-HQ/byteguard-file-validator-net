@@ -1,10 +1,10 @@
-name: Continout Integration
+name: Continous Integration
 
 on:
   push:
-    branches: [ "dev", "master" ]
+    branches: ["dev", "master"]
   pull_request:
-    branches: [ "dev", "master" ]
+    branches: ["dev", "master"]
 
 env:
   CI_BUILD_NUMBER_BASE: ${{ github.run_number }}
@@ -13,7 +13,6 @@ env:
 
 jobs:
   build:
-
     # We need to run on Windows as we're supporting .NET Framework
     runs-on: windows-latest
 
@@ -21,21 +20,21 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v5
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: 10.0.x
-    - name: Compute and set build number
-      shell: bash
-      run: |
+      - uses: actions/checkout@v5
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Compute and set build number
+        shell: bash
+        run: |
           echo "CI_BUILD_NUMBER=$(($CI_BUILD_NUMBER_BASE+1000))" >> $GITHUB_ENV
-    - name: Build & Push
-      env:
-        PR_TRIGGER: ${{ env.PR_TRIGGER }}
-        DOTNET_CLI_TELEMTRY_OPTOUT: true
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      shell: pwsh
-      run: |
-        ./Build.ps1
+      - name: Build & Push
+        env:
+          PR_TRIGGER: ${{ env.PR_TRIGGER }}
+          DOTNET_CLI_TELEMTRY_OPTOUT: true
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          ./Build.ps1

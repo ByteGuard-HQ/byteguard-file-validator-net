@@ -17,7 +17,7 @@ It helps you enforce consistent file upload rules by checking:
 - ✅ Validate files by **extension**
 - ✅ Validate files by **size**
 - ✅ Validate files by **signature (_magic-numbers_)**
-- ✅ Validate **security aspects** for archive-based formats (_Open XML and Open Document Formats_)
+- ✅ Validate **specification conformance** for archive-based formats (_Open XML and Open Document Formats_)
 - ✅ **Ensure no malware** through a variety of antimalware scanners
 - ✅ Validate using file path, `Stream`, or `byte[]`
 - ✅ Configure which file types to support
@@ -154,7 +154,7 @@ For some formats, additional checks are performed:
   - Extension
   - File size
   - Signature
-  - Archive-based security validation
+  - Basic specification conformance validation
   - Malware scan result
 
 - **Other binary formats**:
@@ -173,6 +173,23 @@ The `FileValidatorConfiguration` supports:
 | `FileSizeLimit`               | Yes      | N/A     | Maximum permitted size of files.<br>Use the static `ByteSize` class provided with this package, to simplify your limit.            |
 | `ThrowExceptionOnInvalidFile` | No       | `true`  | Whether to throw an exception on invalid files or return `false`.                                                                  |
 
+### File type specific validation rules
+
+The `FileValidatorConfiguration` contains file type specific validation rules through `FileTypeRules`. These settings allow for fine control over validation rules for the individual file types, where supported.
+
+#### ODF rules
+
+| Setting            | Default | Description                                               |
+| ------------------ | ------- | --------------------------------------------------------- |
+|  `RequireMimetype` | `true`  |  Whether a `mimetype` file is required to pass validation |
+
+#### Open XML rules
+
+| Setting                        | Default       | Description                                                                                                                                                                             |
+| ------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PerformConformanceValidation` | `true`        |  Whether a conformance/specification validation should be performed as part of the seucirt validation                                                                                   |
+| `ConformanceVersion`           |  `Office2010` | Defines the version speification version to validate against (_valid options are defined by `FileFormatVersion` in [`DocumentFormat.OpenXml`](https://github.com/dotnet/Open-XML-SDK)_) |
+
 ### Exceptions
 
 When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will throw one of the appropriate exceptions defined below. However, when `ThrowExceptionOnInvalidFile` is set to `false`, all validation functions will either return `true` or `false`.
@@ -183,8 +200,8 @@ When `ThrowExceptionOnInvalidFile` is set to `true`, validation functions will t
 | `UnsupportedFileException`           | Thrown when the file extension is not in the list of supported types.                                |
 | `InvalidFileSizeException`           | Thrown when the file size exceeds the configured file size limit.                                    |
 | `InvalidSignatureException`          | Thrown when the file's signature does not match the expected signature for its type.                 |
-| `InvalidOpenXmlFormatException`      | Thrown when the internal structure of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.). |
-| `InvalidOpenDocumentFormatException` | Thrown when the specification conformance of an Open Document Format file is invalid (`.odt`, etc.). |
+| `InvalidOpenXmlFormatException`      | Thrown when the validation of an Open XML file is invalid (`.docx`, `.xlsx`, `.pptx`, etc.).         |
+| `InvalidOpenDocumentFormatException` | Thrown when the validation of an Open Document Format file is invalid (`.odt`, `.ods`, `.odp` etc.). |
 | `MalwareDetectedException`           | Thrown when the configured antimalware scanner detected malware in the file from a scan result.      |
 
 ## When to use this package
