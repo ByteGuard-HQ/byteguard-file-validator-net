@@ -230,6 +230,11 @@ namespace ByteGuard.FileValidator
                 {
                     new byte[] { 0x57, 0x41, 0x56, 0x45 } // WAVE
                 }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Txt,
+                AllowMissingSignature = true
             }
         };
 
@@ -520,6 +525,12 @@ namespace ByteGuard.FileValidator
                 }
 
                 return false;
+            }
+
+            // If the file definition allows for missing signatures, we can return early as the signature validation is effectively bypassed.
+            if (fileDefinition.AllowMissingSignature)
+            {
+                return true;
             }
 
             // As PDF documents are somewhat special in terms of both signature validation,

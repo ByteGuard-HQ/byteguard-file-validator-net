@@ -109,5 +109,10 @@
         /// Waveform Audio File Format.
         /// </summary>
         public const string Wav = ".wav";
+
+        /// <summary>
+        /// Text File.
+        /// </summary>
+        public const string Txt = ".txt";
     }
 }
