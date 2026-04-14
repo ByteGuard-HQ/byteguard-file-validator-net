@@ -235,6 +235,11 @@ namespace ByteGuard.FileValidator
             {
                 FileType = FileExtensions.Txt,
                 AllowMissingSignature = true
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Csv,
+                AllowMissingSignature = true
             }
         };
 
