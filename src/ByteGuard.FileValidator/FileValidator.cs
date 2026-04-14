@@ -230,6 +230,11 @@ namespace ByteGuard.FileValidator
                 {
                     new byte[] { 0x57, 0x41, 0x56, 0x45 } // WAVE
                 }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Txt,
+                AllowMissingSignature = true
             }
         };
 
