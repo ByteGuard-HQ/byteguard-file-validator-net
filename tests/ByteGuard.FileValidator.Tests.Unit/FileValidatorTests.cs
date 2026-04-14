@@ -420,6 +420,7 @@ public class FileValidatorTests
 
     [Theory(DisplayName = "HasValidSignature(byte[]) should skip signature validation for file types that allow missing signatures and return true")]
     [InlineData(new byte[] { 0x74, 0x65, 0x73, 0x74 }, "test.txt")] // TXT
+    [InlineData(new byte[] { 0x74, 0x65, 0x73, 0x74, 0x3B, 0x63, 0x6F, 0x6C, 0x75, 0x6D, 0x6E, 0x31 }, "test.csv")] // CSV
     public void HasValidSignature_FileTypeAllowsMissingSignature_ShouldReturnTrue(byte[] fileBytes, string fileName)
     {
         // Arrange

@@ -114,5 +114,10 @@
         /// Text File.
         /// </summary>
         public const string Txt = ".txt";
+
+        /// <summary>
+        /// Comma-Separated Values.
+        /// </summary>
+        public const string Csv = ".csv";
     }
 }
