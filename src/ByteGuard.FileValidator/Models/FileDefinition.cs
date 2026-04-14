@@ -11,6 +11,16 @@
         public string FileType { get; set; } = default!;
 
         /// <summary>
+        /// Whether this file type is allowed to omit a binary signature. Defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Some file types, such as .txt files, do not have a binary signature.
+        /// Setting this property to <c>true</c> allows files of this type to be considered valid even if they do not have a binary signature.
+        /// This is useful for file types that do not have a binary signature, but still need to be validated by other mechanisms.
+        /// </remarks>
+        public bool AllowMissingSignature { get; set; } = false;
+
+        /// <summary>
         /// Valid header signatures.
         /// </summary>
         /// <remarks>

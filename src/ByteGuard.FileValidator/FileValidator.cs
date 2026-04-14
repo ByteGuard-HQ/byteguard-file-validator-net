@@ -522,6 +522,12 @@ namespace ByteGuard.FileValidator
                 return false;
             }
 
+            // If the file definition allows for missing signatures, we can return early as the signature validation is effectively bypassed.
+            if (fileDefinition.AllowMissingSignature)
+            {
+                return true;
+            }
+
             // As PDF documents are somewhat special in terms of both signature validation,
             // we need to investigate these files further. The PdfValidator is made specifically
             // for this purpose.
