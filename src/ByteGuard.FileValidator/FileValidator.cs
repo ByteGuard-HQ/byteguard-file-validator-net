@@ -265,6 +265,28 @@ namespace ByteGuard.FileValidator
                 {
                     new byte[] { 0x47, 0x49, 0x46, 0x38 }, // GIF8
                 }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Tif,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x49, 0x49, 0x2A, 0x00 }, // II*␀ (Intel byte order)
+                    new byte[] { 0x4D, 0x4D, 0x00, 0x2A }, // MM␀* (Motorola byte order)
+                    new byte[] { 0x49, 0x49, 0x2B, 0x00 }, // II+␀ (BigTIFF, Intel byte order)
+                    new byte[] { 0x4D, 0x4D, 0x00, 0x2B }  // MM␀+ (BigTIFF, Motorola byte order)
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Tiff,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x49, 0x49, 0x2A, 0x00 }, // II*␀ (Intel byte order)
+                    new byte[] { 0x4D, 0x4D, 0x00, 0x2A }, // MM␀* (Motorola byte order)
+                    new byte[] { 0x49, 0x49, 0x2B, 0x00 }, // II+␀ (BigTIFF, Intel byte order)
+                    new byte[] { 0x4D, 0x4D, 0x00, 0x2B }  // MM␀+ (BigTIFF, Motorola byte order)
+                }
             }
         };
 
