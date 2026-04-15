@@ -109,5 +109,60 @@
         /// Waveform Audio File Format.
         /// </summary>
         public const string Wav = ".wav";
+
+        /// <summary>
+        /// Text File.
+        /// </summary>
+        public const string Txt = ".txt";
+
+        /// <summary>
+        /// Comma-Separated Values.
+        /// </summary>
+        public const string Csv = ".csv";
+
+        /// <summary>
+        /// Icon File.
+        /// </summary>
+        public const string Ico = ".ico";
+
+        /// <summary>
+        /// High Efficiency Image Container.
+        /// </summary>
+        public const string Heic = ".heic";
+
+        /// <summary>
+        /// Graphics Interchange Format.
+        /// </summary>
+        public const string Gif = ".gif";
+
+        /// <summary>
+        /// Tag Image File Format.
+        /// </summary>
+        public const string Tif = ".tif";
+
+        /// <summary>
+        /// Tag Image File Format.
+        /// </summary>
+        public const string Tiff = ".tiff";
+
+        /// <summary>
+        /// Ogg Vorbis Audio.
+        /// </summary>
+        public const string Ogg = ".ogg";
+
+        /// <summary>
+        /// Ogg Vorbis Audio.
+        /// </summary>
+        public const string Oga = ".oga";
+
+        /// <summary>
+        /// Ogg Video.
+        /// </summary>
+        public const string Ogv = ".ogv";
+
+        /// <summary>
+        /// Ogg Multiplex.
+        /// </summary>
+        public const string Ogx = ".ogx";
     }
 }

@@ -1,13 +1,14 @@
 # ByteGuard File Validator ![NuGet Version](https://img.shields.io/nuget/v/ByteGuard.FileValidator)
 
-**ByteGuard.FileValidator** is a lightweight security-focused library for validating user-supplied files in .NET applications.  
+**ByteGuard.FileValidator** is a lightweight security-focused library for validating user-supplied files in .NET applications.
+
 It helps you enforce consistent file upload rules by checking:
 
 - Allowed file extensions
 - File size limits
 - File signatures (magic numbers) to detect spoofed types
 - Security validation for Office Open XML / Open Document Formats (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.odp`, `.ods`)
-- Malware scan result using a varity of scanners (_requires the addition of a specific ByteGuard.FileValidator scanner package_)
+- Malware scan result using a varity of scanners (_requires the addition of a specific [ByteGuard.FileValidator](https://github.com/ByteGuard-HQ/byteguard-file-validator-net/wiki/Available-AV-scanners) scanner package_)
 
 > ⚠️ **Important:** This package is one layer in a defense-in-depth strategy.  
 > It does **not** replace endpoint protection, sandboxing, input validation, or other security controls.
@@ -18,9 +19,10 @@ It helps you enforce consistent file upload rules by checking:
 - ✅ Validate files by **size**
 - ✅ Validate files by **signature (_magic-numbers_)**
 - ✅ Validate **specification conformance** for archive-based formats (_Open XML and Open Document Formats_)
-- ✅ **Ensure no malware** through a variety of antimalware scanners
+- ✅ **Ensure no malware** through a variety of [antimalware scanners](https://github.com/ByteGuard-HQ/byteguard-file-validator-net/wiki/Available-AV-scanners)
 - ✅ Validate using file path, `Stream`, or `byte[]`
-- ✅ Configure which file types to support
+- ✅ [Rich integration with NET Core](https://github.com/ByteGuard-HQ/byteguard-file-validator-extensions-dependency-injection)
+- ✅ Configure which [file types](https://github.com/ByteGuard-HQ/byteguard-file-validator-net/wiki/Validation-features) to support
 - ✅ Configure whether to **throw exceptions** or simply return a boolean
 - ✅ **Fluent configuration API** for easy setup
 
@@ -38,7 +40,7 @@ dotnet add package ByteGuard.FileValidator
 
 ### Antimalware scanners
 
-In order to use the antimalware scanning capabilities, ensure you have a ByteGuard.FileValidator antimalware package referenced as well. You can find the relevant scanner package on [NuGet](https://www.nuget.org/packages?q=ByteGuard.FileValidator.Scanner.&includeComputedFrameworks=true&prerel=true&sortby=relevance) under the namespace `ByteGuard.FileValidator.Scanner`.
+In order to use the antimalware scanning capabilities, ensure you have a [ByteGuard.FileValidator antimalware package](https://github.com/ByteGuard-HQ/byteguard-file-validator-net/wiki/Available-AV-scanners) referenced as well. You can find the relevant scanner package on [NuGet](https://www.nuget.org/packages?q=ByteGuard.FileValidator.Scanner.&includeComputedFrameworks=true&prerel=true&sortby=relevance) under the namespace `ByteGuard.FileValidator.Scanner`.
 
 ## Usage
 
@@ -130,38 +132,7 @@ public async Task<IActionResult> Upload(IFormFile file)
 
 ## Supported File Extensions
 
-The following file types are supported by the `FileValidator`:
-
-| Category      | Supported extensions                                                              |
-| ------------- | --------------------------------------------------------------------------------- |
-| **Documents** | `.doc`, `.docx`, `.xls`, `.xlsx`, `.pptx`, `.odp`, `.ods`, `.odt`, `.pdf`, `.rtf` |
-| **Images**    | `.jpg`, `.jpeg`, `.png,`, `.bmp`                                                  |
-| **Video**     | `.mov`, `.avi`, `.mp4`                                                            |
-| **Audio**     | `.m4a`, `.mp3`, `.wav`                                                            |
-
-### Validation coverage per type
-
-`IsValidFile` always validates:
-
-- File extension (_against `SupportedFileTypes`_)
-- File size (_against `FileSizeLimit`_)
-- File signature (_magic number_)
-- Malware scan result (_if an antimalware scanner has been configured_)
-
-For some formats, additional checks are performed:
-
-- **Microsoft Office / Open Document Format** (`.docx`, `.xlsx`, `.pptx`, `.ods`, `.odp`, `.odt`):
-  - Extension
-  - File size
-  - Signature
-  - Basic specification conformance validation
-  - Malware scan result
-
-- **Other binary formats**:
-  - Extension
-  - File size
-  - Signature
-  - Malware scan result
+The file validator supports a variety of different file extensions. The complete list including the individual validation mechanisms per type, is available on the [WIKI](https://github.com/ByteGuard-HQ/byteguard-file-validator-net/wiki/Validation-features).
 
 ## Configuration Options
 
