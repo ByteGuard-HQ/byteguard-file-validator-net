@@ -246,8 +246,17 @@ namespace ByteGuard.FileValidator
                 FileType = FileExtensions.Ico,
                 ValidSignatures = new List<byte[]>
                 {
-                    new byte[] { 0x00, 0x00, 0x01, 0x00 }, // ICO
+                    new byte[] { 0x00, 0x00, 0x01, 0x00 }, // ␀␀␁␀
                 }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Heic,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63 } // ftypheic
+                },
+                SignatureOffset = 4
             }
         };
 
