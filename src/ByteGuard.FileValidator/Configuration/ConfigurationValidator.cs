@@ -36,7 +36,7 @@ namespace ByteGuard.FileValidator.Configuration
                 }
 
                 // Validate file type is supported by the current version of FileValidator.
-                if (!FileValidator.SupportedFileDefinitions.Any(f => f.FileType.Equals(fileType)))
+                if (!FileDefinitions.SupportedFileDefinitions.Any(f => f.FileType.Equals(fileType)))
                 {
                     throw new UnsupportedFileException($"File type '{fileType}' is not supported in the current version of FileValidator.");
                 }
