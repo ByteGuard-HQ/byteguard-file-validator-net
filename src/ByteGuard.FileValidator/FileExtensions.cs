@@ -144,5 +144,25 @@
         /// Tag Image File Format.
         /// </summary>
         public const string Tiff = ".tiff";
+
+        /// <summary>
+        /// Ogg Vorbis Audio.
+        /// </summary>
+        public const string Ogg = ".ogg";
+
+        /// <summary>
+        /// Ogg Vorbis Audio.
+        /// </summary>
+        public const string Oga = ".oga";
+
+        /// <summary>
+        /// Ogg Video.
+        /// </summary>
+        public const string Ogv = ".ogv";
+
+        /// <summary>
+        /// Ogg Multiplex.
+        /// </summary>
+        public const string Ogx = ".ogx";
     }
 }

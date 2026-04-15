@@ -287,6 +287,38 @@ namespace ByteGuard.FileValidator
                     new byte[] { 0x49, 0x49, 0x2B, 0x00 }, // II+␀ (BigTIFF, Intel byte order)
                     new byte[] { 0x4D, 0x4D, 0x00, 0x2B }  // MM␀+ (BigTIFF, Motorola byte order)
                 }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ogg,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x4F, 0x67, 0x67, 0x53 } // OggS
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Oga,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x4F, 0x67, 0x67, 0x53 } // OggS
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ogv,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x4F, 0x67, 0x67, 0x53 } // OggS
+                }
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ogx,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x4F, 0x67, 0x67, 0x53 } // OggS
+                }
             }
         };
 
