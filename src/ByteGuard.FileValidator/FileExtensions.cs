@@ -124,5 +124,10 @@
         /// Icon File.
         /// </summary>
         public const string Ico = ".ico";
+
+        /// <summary>
+        /// High Efficiency Image Container.
+        /// </summary>
+        public const string Heic = ".heic";
     }
 }
