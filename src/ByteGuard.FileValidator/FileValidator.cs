@@ -257,6 +257,14 @@ namespace ByteGuard.FileValidator
                     new byte[] { 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63 } // ftypheic
                 },
                 SignatureOffset = 4
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Gif,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x47, 0x49, 0x46, 0x38 }, // GIF8
+                }
             }
         };
 

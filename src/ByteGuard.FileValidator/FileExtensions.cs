@@ -129,5 +129,10 @@
         /// High Efficiency Image Container.
         /// </summary>
         public const string Heic = ".heic";
+
+        /// <summary>
+        /// Graphics Interchange Format.
+        /// </summary>
+        public const string Gif = ".gif";
     }
 }
