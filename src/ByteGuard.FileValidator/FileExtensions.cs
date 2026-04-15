@@ -119,5 +119,10 @@
         /// Comma-Separated Values.
         /// </summary>
         public const string Csv = ".csv";
+
+        /// <summary>
+        /// Icon File.
+        /// </summary>
+        public const string Ico = ".ico";
     }
 }

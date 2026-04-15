@@ -240,6 +240,14 @@ namespace ByteGuard.FileValidator
             {
                 FileType = FileExtensions.Csv,
                 AllowMissingSignature = true
+            },
+            new FileDefinition
+            {
+                FileType = FileExtensions.Ico,
+                ValidSignatures = new List<byte[]>
+                {
+                    new byte[] { 0x00, 0x00, 0x01, 0x00 }, // ICO
+                }
             }
         };
 
