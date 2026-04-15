@@ -134,5 +134,15 @@
         /// Graphics Interchange Format.
         /// </summary>
         public const string Gif = ".gif";
+
+        /// <summary>
+        /// Tag Image File Format.
+        /// </summary>
+        public const string Tif = ".tif";
+
+        /// <summary>
+        /// Tag Image File Format.
+        /// </summary>
+        public const string Tiff = ".tiff";
     }
 }
